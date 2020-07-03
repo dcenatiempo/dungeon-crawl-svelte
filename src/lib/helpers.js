@@ -1,17 +1,17 @@
+import { get } from 'svelte/store';
+
 import { getRand, smallest } from './utilities';
 import { weaponList, materialList, gearList } from '../store/constants';
 import { currentWorld } from '../store/world';
+import { currentMonsters } from '../store/monsters';
+import { level } from '../store/player';
 
 export {
 	getExpLevel,
 	getAttackPoints,
 	getDefense,
 	getDodge,
-	getCarryCapacity,
 	getCarryAmount,
-	getTotalFoodCapacity,
-	getGoldCarryCapacity,
-	getFoodCarryCapacity,
 	getMarketPrice,
 	getPlayerPrice,
 	getPrice,
@@ -20,43 +20,28 @@ export {
 	getMaxHealth,
 	getExpFromMonst,
 	randomGold,
-	isAliveMonster,
-	isDeadMonster,
 	isPlayer,
 	isInBounds,
 	getArmor,
 	getWeapon,
-	createNewLevel,
-	createTownLevel
+	createDungeonLevel,
+	createTownLevel,
+	createMarket,
 }
 
 // returns char level
 function getExpLevel (char) {
-	// if (char.type === 'player') {
-	// 	return Math.floor((-1+Math.sqrt(1+8*char.experience/50))/2)+1;
-	// }
-	// else {
-		if (typeof store === 'undefined') {
-			 return 1;
-		}
-		else return store.getState().player.level+1;
-	// }
+	if (typeof store === 'undefined') {
+			return 1;
+	}
+	return level+1;
 }
 // returns attack points of character
-function getAttackPoints(char) {
-	//console.log("getting attack points")
-	if (char.type === 'player'){
-		return Math.round(
-			(char.strength + char.intel)
-			* ( ( char.body.filter(i=>i.type==='weapon')[0].attack + 10 ) / 10 )
-			* ( ( getExpLevel(char) + 1 ) / 4));
-	}
-	else {
-		return Math.round(
-			(char.strength + char.intel)
-			* ( ( char.weapon.attack + 10 ) / 10 )
-			* ( ( getExpLevel(char) + 1 ) / 4));
-	}
+function getAttackPoints(monster) {
+	return Math.round(
+		(monster.strength + monster.intel)
+		* ( ( monster.weapon.attack + 10 ) / 10 )
+		* ( ( getExpLevel(monster) + 1 ) / 4));
 }
 function getDefense(char) {
 	//TODO: Armor
@@ -74,10 +59,7 @@ function getDodge(char) {
 	// speed, intel //TODO: account for ring of agility
 	return char.speed * char.intel;
 }
-function getCarryCapacity(char) {
-	//TODO: strength
-	return 10 + char.strength*2 ;
-}
+
 function getCarryAmount(char) {					
 	const bagItems = char.bag.reduce((sum, item)=> {	// loop through bag items
 		if (item.type === 'food')
@@ -87,15 +69,7 @@ function getCarryAmount(char) {
 		else return sum + item.size;}, 0);			// other bag items take up 1 spot/size
 	return bagItems;
 }
-function getTotalFoodCapacity(player) { // belly + bag capacity
-	return (getMaxHealth(player)-player.health) + ((getCarryCapacity(player))-(getCarryAmount(player))*10);
-}
-function getGoldCarryCapacity(player) {
-	return ((getCarryCapacity(player)-getCarryAmount(player))*50);
-}
-function getFoodCarryCapacity(player) { // bag food capacity
-	return ((getCarryCapacity(player)-getCarryAmount(player))*10);
-}
+
 function getMarketPrice (item) { return getPrice(item, 1.25); }
 function getPlayerPrice (item) { return getPrice(item, .75); }
 function getPrice (item, dif) {
@@ -147,38 +121,11 @@ function randomGold (gold) {
 	return Math.round(gold+(sign*gold / getRand(1,10)));
 }
 
-function isAliveMonster(target){
-	const level = store.getState().player.level;
-	const monstersOnLevel = store.getState().monsters[level];
-	let mIndex = false;
-	if (monstersOnLevel === undefined) {
-		return mIndex;
-	}
-	monstersOnLevel.forEach((monster, index) => {
-		if (target[0] == monster.local[0] && target[1] == monster.local[1]) {
-			if(monster.health > 0) {
-				mIndex = index;
-	}}});
-	return mIndex;
-}
 
-function isDeadMonster(target){ // monster is dead, but has use
-	const level = store.getState().player.level;
-	const monstersOnLevel = store.getState().monsters[level];
-	let mIndex = false;
-	if (monstersOnLevel === undefined) {
-		return mIndex;
-	}
-	monstersOnLevel.forEach((monster, index) => {
-		if (target[0] == monster.local[0] && target[1] == monster.local[1]) {
-				if (monster.health<=0 && (monster.food>0 || monster.gold>0 || (monster.weapon.name != 'fist' && monster.armor.rarity >= store.getState().settings.rarityTolerance) || (monster.armor.name != 'no armor' && monster.armor.rarity >= store.getState().settings.rarityTolerance)))
-					mIndex = index;
-	}});
-	return mIndex;
-}
+
 // given location target (row,col) returns true if player is on that location, false if not
-function isPlayer(target, playerLocale){
-	if (target[0] == playerLocale[0] && target[1] == playerLocale[1])
+function isPlayer(target, playerlocale){
+	if (target[0] == playerlocale[0] && target[1] == playerlocale[1])
 		return true
 	else return false
 }
@@ -220,9 +167,10 @@ function getArmor(tools, level = 0) {
     	return (Object.assign({}, mtrl, bP, {rarity: mtrl.rarity + bP.rarity, defense: mtrl.defense + bP.defense}))
   }
 }
-function getWeapon(tools, level = 0) {
+function getWeapon(tools, levelProp = 0) {
+	let level = levelProp;
 	if (typeof store === 'object' && level === 0) //getting weapon for monster, else getting weapon for market
-		level= store.getState().player.level;
+		level= Slevel;
 	let num = getRand(1,smallest(10, 1+Math.round(level/1.5))); //limits weapons available based on player level
 	if (!tools) {  // non tool carrying monster
 		return weaponList[0]
@@ -233,6 +181,7 @@ function getWeapon(tools, level = 0) {
 		return (tempArray.filter( (item, index) => index === num2)[0])
 	}
 }
+
 function createTownLevel (level) {
 	let rows = 11;
 	let cols = 11;
@@ -260,7 +209,7 @@ function createTownLevel (level) {
 	return newLevel;
 }
 
-function createNewLevel (toLevel) {
+function createDungeonLevel (toLevel) {
 	let rows = 50;
 	let cols = 50;
 	let newLevel = [];
@@ -333,4 +282,50 @@ function createNewLevel (toLevel) {
 		}
 	}
 	return newLevel;
+}
+
+// returns array of 1 gold object, 1 food object, 0-12 gear objects
+function createMarket (level) {
+	let market = [];
+	level += 3;
+	market.push( { gold: randomGold( 50*( level ) ), bag: [] } );
+	market[0].bag.push( { type: 'food', amount: randomGold( 10*( level ) ) } );
+	for (let i=0; i<( 1 + randomGold(3) ); i++) {
+		let weapon = getWeapon(true, level );
+		weapon.name === 'fist' ? null : market[0].bag.push( weapon );
+	}
+	for (let i=0; i<( 1 + randomGold(3) ); i++) {
+		let armor = getArmor(true, level )
+		market[0].bag.push( armor );
+	}
+	console.log("market:")
+	console.log(market)
+	return market
+}
+
+// returns damage from battle with monster[i].
+// attacker is boolean that answers "is the monster the attacker?"
+function battle(i, attacker) {
+	const player = store.getState().player;
+	const level = player.level;	
+	const monster = store.getState().monsters[level][i];
+	let damage =	Math.round(getAttackPoints( attacker ? monster : player ) * (1-getDefense( attacker ? player : monster ) / 100));
+	console.log(getAttackPoints( attacker ? monster : player )+ " attack -"+(getDefense( attacker ? player : monster ) / 100)+"% defence = "+damage+" damage")
+	//If defender dodges attacke, no damage is done
+	if ( getRand(0,100) <= getDodge(attacker ? player : monster)) {
+		 damage = 0;
+		//console.log("attack was dodged!")
+	}
+	if (attacker) {
+		( damage === 0 ? store.dispatch(addPlayerAlertAction("Dodge!")) : store.dispatch(addPlayerAlertAction(("-"+damage+" health"))) );
+	}
+	else if (!attacker) {
+		if ( damage === 0 )
+			store.dispatch( addPlayerAlertAction( "Missed!" ) );
+		else {
+			store.dispatch( addPlayerAlertAction( ( "+"+damage+" attack!" ) ) );
+		}
+		sleep( 300 ).then( () => { store.dispatch( monsterFlashOverAction( i ) ) } );
+	}
+	return damage;
 }

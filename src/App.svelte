@@ -1,18 +1,185 @@
 <script>
 	import { onMount } from 'svelte';
-	import { dimensions, tileSize, grid } from './store/app.js';
+
+	import { dimensions, tileSize, grid, displayMarket } from './store/app.js';
+	import { world, currentWorld, updateVisibility, addNewLevel } from './store/world.js';
+	import { monsters, populateLevel, monsterLoseHealth, isAliveMonster, isDeadMonster, monsterTurn } from './store/monsters.js';
+	import { level, locale, movePlayer, changeLevel, gainExperience, clearPlayerAlerts, pickUpItems, movesRemain, attacksRemain, resetMoves } from './store/player.js';
+	import { populateMarket } from './store/market.js';
+	import { townEvery } from './store/constants';
+	
 	import Header from './components/Header.svelte';
 	import World from './components/World.svelte';
 
-	$: console.log($tileSize)
-	$: console.log($grid)
+	import { getExpFromMonst } from './lib/helpers';
+	import { sleep } from './lib/utilities';
+
+	// $: console.log($tileSize)
+	// $: console.log($grid)
+	$: console.log($locale)
+
+	function movePlayerAction(target) {
+		movePlayer(target);
+		updateVisibility(target);
+	}
+
+	onMount(() => {
+		window.addEventListener('keydown', handleKeypress)
+		movesRemain.subscribe(val => {
+			if (!val) {
+				//this.props.resetPlayerMoves();
+				// check to see if any monsters on non-foggy squares
+				let countMonst = 0;
+				const currentWorld = $world[$level];
+				const currentMonsters = $monsters[$level];
+				currentMonsters.reduce((mList, m, i)=>{
+					if ( currentWorld[m.locale[0]][m.locale[1]].fog === 0 && m.health > 0) {
+						countMonst++
+						mList.push(i)
+						return mList
+					}
+					else return mList
+				},[]).forEach((mi,i) => sleep((i+1)*200).then(() => { monsterTurn(mi); }) );
+				
+				sleep(200+(countMonst)*200).then(() => { resetMoves(); });
+			
+			}
+		})
+	});
+
+	
+
+	
+
+	function handleKeypress(e) {
+		function getCoords(fromLevel, toLevel){
+				let newWorld = $world[toLevel];
+				let coords;
+				for (let r=1; r<newWorld.length-1; r++) {
+					for (let c=1; c<newWorld[1].length-1; c++) {
+						if (newWorld[r][c].type === 'gate') {
+							//console.log("found a gate!!! at "+r+","+c)
+							if (newWorld[r][c].toLevel === fromLevel){
+								coords = [r,c];
+								// reset c and r to exit loop
+								c = newWorld[1].length;
+								r = newWorld.length;
+								//console.log("placing player at gate at "+coords[0]+" "+coords[1])
+				}}}}
+				//console.log("Level: "+toLevel+ " coords: "+coords)
+				return ( coords )
+			}
+		
+		//console.log("keypress: "+e.keyCode);
+		let currCell = $locale;					// players current coordinates
+		let currentMonsters = $monsters[$level]; // current dungeon monsters list
+		let currentWorld = $world[$level];
+		let tarCell;
+		let kp = e.keyCode || e.which;
+		let dir; // [row direction, col direction]
+		//console.log(kp)
+		switch (kp) {
+			case 55:	// 7
+				dir = [-1,-1]; break;
+			case 38:	// up arrow
+			case 56: // 8
+				dir = [-1, 0]; break;
+			case 57:	// 9
+				dir = [-1, 1]; break;
+			case 37: // left arrow
+			case 52:	// 4
+				dir = [0, -1]; break;
+			case 39:	// right arrow
+			case 54:	// 6
+				dir = [0, 1]; break;
+			case 49:	// 1
+				dir = [1, -1]; break;
+			case 40:	// down arrow
+			case 50:	// 2
+				dir = [1, 0]; break;
+			case 51:	// 3
+				dir = [1, 1]; break;
+			// REST/SKIP MOVE
+			case 32: // space
+			case 82: // R
+			case 53: // 5
+				dir = [0,0]; break;
+			default:
+				dir = undefined;
+		}
+		// targetCell is potential future location of player 
+		tarCell = [(currCell[0]+dir[0]),(currCell[1]+dir[1])];
+		// does player have any moves left???
+		if ($movesRemain === 0 ) {
+			//console.log("no more moves");
+			return;
+		}
+		// if targetCell is a wall...
+
+		if (currentWorld[currCell[0]][currCell[1]].type === 'market') {
+			// if (this.props.settings.displayMarket)
+			// 	store.dispatch( toggleMarketMenuAction() );
+		}
+			
+		if (currentWorld[tarCell[0]][tarCell[1]].type === 'wall') {
+			;//console.log("you can't walk through walls!");
+		}
+		// if targetCell is a gate...
+		else if (currentWorld[tarCell[0]][tarCell[1]].type === 'gate') {
+			let fromLevel = $level;
+			let toLevel = currentWorld[tarCell[0]][tarCell[1]].toLevel;
+			movePlayerAction(tarCell);				// move player onto gate
+			changeLevel(toLevel);				// change players level/location
+			if (toLevel >= $world.length) {	// if this level does not exist then...
+				//console.log("creating level "+toLevel)		//
+				addNewLevel(toLevel); // create new level
+				populateLevel(toLevel); // populate new level with monsters
+				(toLevel%townEvery === 0 ? populateMarket(toLevel) : null )
+			}
+			movePlayerAction(getCoords(fromLevel, toLevel));	
+		}
+		// if targetCell is a market...
+		else if (currentWorld[tarCell[0]][tarCell[1]].type === 'market') {
+			console.log("lets barter!");
+			movePlayerAction(tarCell);
+			if (!$displayMarket)
+				displayMarket.set(true);
+		}
+		// if targetCell is a monster...
+		else if (isAliveMonster(tarCell, currentMonsters) !== false ) {
+			let m = isAliveMonster(tarCell, currentMonsters);
+			// check to see if player has any attacks left
+			if ($attacksRemain >= 1 ) {
+				//console.log("Attack "+currentMonsters[m].type+"!");
+				let damage = battle(m, false);
+				monsterLoseHealth(m, damage);
+				if (isAliveMonster(tarCell, currentMonsters) === false) {
+					//console.log("earn experience "+getExpFromMonst(currentMonsters[m]))
+					//this.props.addPlayerAlert(("+"+getExpFromMonst(currentMonsters[m])+" experience"))
+					gainExperience(getExpFromMonst(currentMonsters[m]))
+				}
+				/// timed erase of alerts
+				clearPlayerAlerts();
+			}
+			else movePlayerAction(locale);//no more attacks: 'move' player to square already on
+		}
+		else if (isDeadMonster(tarCell, currentMonsters) !== false ) {
+			//console.log("pick up items");
+			pickUpItems(tarCell, currentMonsters);
+			movePlayerAction(tarCell);
+			/// timed erase of alerts
+			clearPlayerAlerts();
+		}
+		// if targetCell is open ground...
+		else if (currentWorld[tarCell[0]][tarCell[1]].type === 'floor') {
+			movePlayerAction(tarCell);
+		}
+	}
 </script>
 
 <main>
 	<Header />
 	<World />
-	<h1>Hello {$dimensions.w}!</h1>
-	<p>Visit the <a href="https://svelte.dev/tutorial">Svelte tutorial</a> to learn how to build Svelte apps.</p>
 </main>
 
 <style>

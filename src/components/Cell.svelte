@@ -1,30 +1,33 @@
 <script>
 import { level, locale } from '../store/player';
-import { monsters } from '../store/monsters';
-import { isInBounds, isPlayer, isAliveMonster, isDeadMonster } from '../lib/helpers';
+import { monsters, isAliveMonster, isDeadMonster } from '../store/monsters';
+import { isInBounds,  } from '../lib/helpers';
 import { tileSize, toolTip, mouseX, mouseY, toolTipObject } from '../store/app';
-import { currentWorld } from '../store/world';
+import { world } from '../store/world';
 
 export let cell;
+export let isPlayer;
 
+const currentWorld = $world[$level];
 let mID = isAnyMonster(cell);
-let inBounds = isInBounds(cell, $currentWorld);
+let inBounds = isInBounds(cell, currentWorld);
 let tile = inBounds
-	? $currentWorld[cell[0]][cell[1]]
+	? currentWorld[cell[0]][cell[1]]
 	: null;
-let classes = !inBounds
+$: classes = !inBounds
 	? ""
 	: tile.type +
 			" vis-" + tile.vis +
 			(tile.fog >= 1 ? " fog" : 
-				( isPlayer(cell, locale) === false ? "" : " player" ) +
+				( !isPlayer ? "" : " player" ) +
 				( mID === false ? "" :
-					( isAliveMonster(cell) !== false ?
+					( isAliveMonster(cell, currentWorld) !== false ?
 						( monster[mID].flash ? " monster damaged": " monster" ) :
-						( isDeadMonster(cell) === false ? "" : " dead" )
+						( isDeadMonster(cell, currentWorld) === false ? "" : " dead" )
 					)
 				)
 			)
+
 let styles = `height: ${$tileSize}px;	width: ${$tileSize}px`;
 let id = `${cell[0]},${cell[1]}`
 
@@ -35,7 +38,7 @@ function isAnyMonster(target){
 		return mIndex;
 	}
 	monstersOnLevel.forEach((monster, index) => {
-		if (target[0] == monster.local[0] && target[1] == monster.local[1]) {
+		if (target[0] == monster.locale[0] && target[1] == monster.locale[1]) {
 				mIndex = index;
 	}});
 	return mIndex;
