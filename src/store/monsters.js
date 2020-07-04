@@ -3,7 +3,7 @@ import { monsterList } from './constants';
 import { world } from './world';
 import { getRand, add } from '../lib/utilities';
 import { level, locale, loseHealth as playerLoseHealth, clearPlayerAlerts } from './player';
-import { randomGold, getArmor, getWeapon, getMaxMoves, getMaxHealth, getMaxAttacks, isPlayer } from '../lib/helpers';
+import { randomGold, getArmor, getWeapon, getMaxMoves, getMaxHealth, getMaxAttacks, isPlayer, battle } from '../lib/helpers';
 
 const townEvery = 5;
 
@@ -12,7 +12,10 @@ export {
 	//actions
 	populateLevel,
 	monsterLoseHealth,
+	takeItemFromMonster,
+	monsterFlashOver,
 	// helpers
+	isAnyMonster,
 	isAliveMonster,
 	isDeadMonster,
 	monsterTurn,
@@ -83,17 +86,59 @@ function populateLevel(toLevel) {
 	monsters.set(newMonsterList);
 }
 
+function moveMonster(id, target) {
+	let newMonsters = JSON.parse(JSON.stringify(get(monsters)));
+	newMonsters[get(level)][id].locale = target;
+	newMonsters[get(level)][id].movesRemain -= 1;
+	monsters.set(newMonsters);
+}
+
 function monsterLoseHealth(id, damage) {
-	let newMonsterList = JSON.parse(JSON.stringify($monsters));
-	newMonsters[level][id].health -= damage;
-	newMonsters[level][id].flash = true;
-	monsters.set(newMonsterList);
+	let newMonsters = JSON.parse(JSON.stringify(get(monsters)));
+	newMonsters[get(level)][id].health -= damage;
+	newMonsters[get(level)][id].flash = true;
+	monsters.set(newMonsters);
+}
+
+function takeItemFromMonster(item, id) {
+	if (id === null) return;
+
+	let newMonsters = JSON.parse(JSON.stringify(get(monsters)));
+	let newMonster = newMonsters[get(level)][id];
+	if (item.type === 'food' || item.type === 'gold')
+		newMonster[item.type] -= item.amount;
+	else if (action.item.type === 'weapon')
+		newMonster.weapon = weaponList[0];
+	else
+		newMonster.armor = 'no armor';
+	monsters.set(newMonsters);
+}
+
+function monsterFlashOver(id) {
+	let newMonsters = JSON.parse(JSON.stringify(get(monsters)));
+	let newMonster = newMonsters[get(level)][id];
+	newMonster.flash = false;
+	monsters.set(newMonsters);
+}
+
+function isAnyMonster(target, monstersOnLevel) {
+	let mIndex = false;
+	if (monstersOnLevel === undefined) {
+		return mIndex;
+	}
+	monstersOnLevel.forEach((monster, index) => {
+		if (target[0] == monster.locale[0] && target[1] == monster.locale[1]) {
+			mIndex = index;
+		}
+	});
+	return mIndex;
 }
 
 function isAliveMonster(target, monstersOnLevel){
 	let mIndex = false;
 	if (monstersOnLevel === undefined) {
 		return mIndex;
+
 	}
 	monstersOnLevel.forEach((monster, index) => {
 		if (target[0] == monster.locale[0] && target[1] == monster.locale[1]) {
@@ -117,9 +162,10 @@ function isDeadMonster(target, monstersOnLevel){ // monster is dead, but has use
 }
 
 function resetMoves(id) {
-	let newMonsterList = JSON.parse(JSON.stringify($monsters));
-	newMonsters[level][id].movesRemain = getMaxMoves(monsters[level][action.id]);
-	monsters.set(newMonsterList);
+	let newMonsters = JSON.parse(JSON.stringify(get(monsters)));
+	const monster = newMonsters[get(level)][id]
+	monster.movesRemain = getMaxMoves(monster);
+	monsters.set(newMonsters);
 }
 
 // for monster index i, exaust moves, then attack
@@ -157,7 +203,7 @@ function monsterTurn(mi){
 		
 		for( let t=0; t<3; t++) {
 			if ( (currentWorld[target[t][0]][target[t][1]].type === 'floor') && (!isAliveMonster(target[t])) && (!isPlayer(target[t], get(locale)))) {
-				store.dispatch(moveMonsterAction(mi, target[t]));
+				moveMonster(mi, target[t]);
 				mL[0] = target[t][0];
 				mL[1] = target[t][1];
 				t=3;

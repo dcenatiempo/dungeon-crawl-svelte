@@ -19,7 +19,6 @@ const currentWorld = derived([world, level], ([$world, $level]) => $world[$level
 const virtualWorld = derived([locale, grid, level, currentWorld], ([$center, $grid, $level, $currentWorld]) => {
 		let height = $grid.height;
 		let width = $grid.width;
-		console.log('pizza:' ,$currentWorld)
 		//console.log(height+","+width)
 		let start = [Math.round($center[0]-(height)/2)+1, Math.round($center[1]-(width)/2)]; // top left corner
 		if ($level%townEvery === 0) {
@@ -52,7 +51,6 @@ function updateVisibility(target) {
 	let cols = dungeon[0].length;
 	let coords ;
 	shadowListConst
-	debugger
 	const shadowList = shadowListConst;
 
 	// takes relative coordinates and converts to absolute coordinates then changes to visible

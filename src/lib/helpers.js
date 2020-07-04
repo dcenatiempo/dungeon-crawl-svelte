@@ -1,10 +1,16 @@
 import { get } from 'svelte/store';
 
-import { getRand, smallest } from './utilities';
+import { getRand, smallest, sleep } from './utilities';
 import { weaponList, materialList, gearList } from '../store/constants';
 import { currentWorld } from '../store/world';
-import { currentMonsters } from '../store/monsters';
-import { level } from '../store/player';
+import { monsters, monsterFlashOver } from '../store/monsters';
+import {
+	level,
+	attackPoints as playerAttackPoints,
+	defense as playerDefense,
+	dodge as playerDodge,
+	addPlayerAlert,
+} from '../store/player';
 
 export {
 	getExpLevel,
@@ -27,6 +33,7 @@ export {
 	createDungeonLevel,
 	createTownLevel,
 	createMarket,
+	battle,
 }
 
 // returns char level
@@ -44,16 +51,7 @@ function getAttackPoints(monster) {
 		* ( ( getExpLevel(monster) + 1 ) / 4));
 }
 function getDefense(char) {
-	//TODO: Armor
-	let defense;
-	if (char.type === 'player') { // monsters
-		defense = char.body.reduce((sum,i)=> {return sum+ i.defense},0)
-		console.log(defense)
-	}
-	else { // player
-		defense = (char.weapon.defense) + (char.armor.defense);
-	}
-	return defense;
+	return (char.weapon.defense) + (char.armor.defense);
 }
 function getDodge(char) {
 	// speed, intel //TODO: account for ring of agility
@@ -120,8 +118,6 @@ function randomGold (gold) {
 		sign = -1;
 	return Math.round(gold+(sign*gold / getRand(1,10)));
 }
-
-
 
 // given location target (row,col) returns true if player is on that location, false if not
 function isPlayer(target, playerlocale){
@@ -306,26 +302,34 @@ function createMarket (level) {
 // returns damage from battle with monster[i].
 // attacker is boolean that answers "is the monster the attacker?"
 function battle(i, attacker) {
-	const player = store.getState().player;
-	const level = player.level;	
-	const monster = store.getState().monsters[level][i];
-	let damage =	Math.round(getAttackPoints( attacker ? monster : player ) * (1-getDefense( attacker ? player : monster ) / 100));
-	console.log(getAttackPoints( attacker ? monster : player )+ " attack -"+(getDefense( attacker ? player : monster ) / 100)+"% defence = "+damage+" damage")
+	const monster = get(monsters)[get(level)][i];
+
+	let attackPoints = attacker
+		? getAttackPoints(monster)
+		: playerAttackPoints;
+
+	let defense = attacker
+		? getDefense(monster)
+		: playerDefense;
+
+	let dodge = attacker
+		? getDodge(monster)
+		: playerDodge;
+
+	let damage = Math.round(attackPoints * (1 - defense / 100));
+
+	console.log(attackPoints+ " attack -"+(defense / 100)+"% defence = "+damage+" damage")
+
 	//If defender dodges attacke, no damage is done
-	if ( getRand(0,100) <= getDodge(attacker ? player : monster)) {
+	if ( getRand(0,100) <= dodge) {
 		 damage = 0;
 		//console.log("attack was dodged!")
 	}
-	if (attacker) {
-		( damage === 0 ? store.dispatch(addPlayerAlertAction("Dodge!")) : store.dispatch(addPlayerAlertAction(("-"+damage+" health"))) );
-	}
-	else if (!attacker) {
-		if ( damage === 0 )
-			store.dispatch( addPlayerAlertAction( "Missed!" ) );
-		else {
-			store.dispatch( addPlayerAlertAction( ( "+"+damage+" attack!" ) ) );
-		}
-		sleep( 300 ).then( () => { store.dispatch( monsterFlashOverAction( i ) ) } );
-	}
+	attacker
+	  ? addPlayerAlert(!damage ? "Dodge!" : `-${damage} health`)
+		: addPlayerAlert(!damage ? "Missed!" : `+${damage} attack!`);
+		
+	sleep(300).then(() => monsterFlashOver(i));
+
 	return damage;
 }

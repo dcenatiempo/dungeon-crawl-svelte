@@ -1,11 +1,12 @@
 <script>
 import Cell from './Cell.svelte';
-import { virtualWorld } from '../store/world';
+import { world, virtualWorld } from '../store/world';
 import { isInBounds, isPlayer} from '../lib/helpers';
 import { level, locale } from '../store/player';
-import { isAliveMonster, isDeadMonster } from '../store/monsters';
+import { monsters, isAnyMonster, isAliveMonster, isDeadMonster } from '../store/monsters';
 
-$: console.log('lasagna', $locale)
+// $: console.log('lasagna', $monsters[$level][0])
+$: console.log('level', $level)
 
 </script>
 
@@ -13,7 +14,13 @@ $: console.log('lasagna', $locale)
 	{#each $virtualWorld as row, i}
 		<div class="row">
 			{#each row as cell, j}
-				<Cell cell={cell} isPlayer={isPlayer(cell, $locale)}/>
+				<Cell
+					cell={cell}
+					isPlayer={isPlayer(cell, $locale)}
+					mID={isAnyMonster(cell, $monsters[$level])}
+					level={$level}
+					inBounds={isInBounds(cell, $world[$level])}
+				/>
 			{/each}
 		</div>
 	{/each}

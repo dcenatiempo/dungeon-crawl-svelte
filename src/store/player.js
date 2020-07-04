@@ -1,5 +1,5 @@
 import { writable, readable, derived, get } from 'svelte/store';
-
+import { takeItemFromMonster } from './monsters';
 import { rarityTolerance } from './app';
 
 import { biggest, smallest } from '../lib/utilities';
@@ -21,17 +21,25 @@ export {
 	bag,
 	hand,
 	flash,
-	alert,
+	alerts,
 	// derived
 	expLevel,
 	maxHealth,
 	maxAttacks,
 	attackPoints,
+	defense,
+	dodge,
+	carryCapacity,
+	carryAmount,
+	totalFoodCapacity,
+	goldCarryCapacity,
+	foodCarryCapacity,
 	// actions
 	movePlayer,
 	loseHealth,
 	changeLevel,
 	gainExperience,
+	addPlayerAlert,
 	clearPlayerAlerts,
 	pickUpItems,
 	resetMoves,
@@ -85,7 +93,7 @@ const bag = writable([
 	}]);
 const hand = writable([]); // temp storing place when moving items
 const flash =	writable(false); // flashes true if being attacked - for animation
-const alert =	writable([]); //['+5 Food', '+20 Gold',
+const alerts =	writable([]); //['+5 Food', '+20 Gold',
 
 const expLevel = derived(experience, $experience => Math.floor((-1+Math.sqrt(1+8*$experience/50))/2)+1);
 const maxHealth = derived([strength, tenacity, expLevel], ([$strength, $tenacity, $expLevel]) => ($strength+$tenacity)*($expLevel+1));
@@ -93,7 +101,8 @@ const attackPoints = derived([strength, intel, body], ([$strength, $intel, $body
 	($strength + $intel)
 	* ( ( $body.filter(i=>i.type==='weapon')[0].attack + 10 ) / 10 )
 	* ( ( getExpLevel(char) + 1 ) / 4)));
-
+const defense = derived([body], ([$body]) => $body.reduce((sum,i)=> {return sum+ i.defense},0));
+const dodge = derived([speed, intel], ([$speed, $intel]) => $speed*$intel)
 const maxMoves = derived([speed, tenacity], ([$speed, $tenacity]) => ($speed + $tenacity*2)/4);
 const maxAttacks = derived([speed, body, maxMoves], ([$speed, $body, $maxMoves]) => smallest(Math.ceil(($speed + $body.filter(i=>i.type==='weapon')[0].speed)/5), $maxMoves));
 const carryCapacity = derived(strength, ($strength) => 10 + $strength*2);
@@ -136,47 +145,56 @@ function loseHealth(damage) {
 }
 
 function playerFlashOver() {
-	const newAlert = [...$alerts] 
-	newAlert.pop()
-	flash.set(newAlert.length === 0 ? false : true);
-	alert.set(newAlert);
+	const newAlerts = [...get(alerts)] 
+	newAlerts.pop()
+	flash.set(newAlerts.length === 0 ? false : true);
+	alerts.set(newAlerts);
 }
 
-function pickUpItem(item) {
+function addPlayerAlert(alert) {
+	const newAlerts = [alert, ...get(alerts)] 
+	alerts.set(newAlerts);
+	flash.set(true);
+}
+
+function pickUpItem(item, id) {
+	// Take item from monster
+	takeItemFromMonster(item, id)
+  // And put in player's hand
 	hand.set([item]);
 }
 
 function storeItem(index) {
-	const currentItem = currentItem;
+	const currentItem = get(hand)[index];
 	let newBag = [];
 	if (currentItem.type === 'food' || currentItem.type === 'gold') {
 		//console.log("adding "+currentItem.type+" to bag")
-		newBag = $bag.map(item => item.type === currentItem.type
+		newBag = get(bag).map(item => item.type === currentItem.type
 			? Object.assign({}, item, { amount: Math.round((item.amount + currentItem.amount)*10)/10 })
 			: item
 		);
 	}
 	else {
-		newBag = $bag.map(item => item);
+		newBag = get(bag).map(item => item);
 		newBag.push(currentItem);
 	}
-	let newHand = $hand.map(item => item);
+	let newHand = get(hand).map(item => item);
 	newHand.splice(index, 1);
 	bag.set(newBag);
 	hand.set(newHand);
 }
 
 function armItem(item) {
-	const currentItem = $hand[index];
-	let newHand = $hand.map(item => item);
+	const currentItem = get(hand)[index];
+	let newHand = get(hand).map(item => item);
 	newHand.splice(index, 1);
 	if (currentItem.type === 'food') {
-		health.set($health + $currentItem.amount);
+		health.set(get(health) + currentItem.amount);
 		hand.set(newHand);
 		return;
 	}
 
-	let newBody = $body.map(item => item);
+	let newBody = get(body).map(item => item);
 	let index = newBody.findIndex(i=> i.type === currentItem.type)
 
 	newBody.splice(index, (index+1 === 0 ? 0 : 1), currentItem);
@@ -184,7 +202,7 @@ function armItem(item) {
 
 	body.set(newBody);
 	hand.set(newHand);
-	movesRemain.set($movesRemain - 1);		
+	movesRemain.set(get(movesRemain) - 1);		
 }
 
 function pickUpItems (target, currentMonsters) {
@@ -204,8 +222,8 @@ function pickUpItems (target, currentMonsters) {
 		let armor = monsters[id].armor;
 		// auto pick up food
 		if (food > 0) {
-			let hunger = $maxHealth-$health;
-			let doggyBag = $foodCarryCapacity;
+			let hunger = maxHealth-health;
+			let doggyBag = foodCarryCapacity;
 			let foodInHand = smallest(food, (hunger+doggyBag));
 			addPlayerAlert(('+'+foodInHand+' food'));
 			if (hunger > 0) {	// eat what food you can
@@ -222,7 +240,7 @@ function pickUpItems (target, currentMonsters) {
 		}
 		// auto pick up gold
 		if (gold > 0) {
-			let purse = getGoldCarryCapacity(player)
+			let purse = goldCarryCapacity
 			let goldInHand = smallest (gold, purse)
 			if (goldInHand > 0) {
 				//console.log("picking up "+goldInHand+" gold");
@@ -232,14 +250,14 @@ function pickUpItems (target, currentMonsters) {
 			}
 		}
 		// auto pick up weapon
-		if (weapon.rarity >= this.props.settings.rarityTolerance && weapon.name != 'fist') {
+		if (weapon.rarity >= get(rarityTolerance) && weapon.name != 'fist') {
 			if (player.body.filter(i=>i.type==='weapon')[0].name === 'fist'  ) {
 				//console.log("pick up and arm "+ weapon.name);
 				addPlayerAlert('+ new weapon')
 				pickUpItem(weapon, id);
 				armItem(0);
 			}
-			else if ( ($carryCapacity - carryAmount) >= weapon.size ) {
+			else if ( (carryCapacity - carryAmount) >= weapon.size ) {
 				//console.log("pick up and store "+ weapon.name);
 				addPlayerAlert('+ new weapon')
 				pickUpItem(weapon, id);
@@ -247,14 +265,14 @@ function pickUpItems (target, currentMonsters) {
 			}
 		}
 		// auto pick up armor
-		if (armor.rarity >= $rarityTolerance) {
-			if ( $body.find( i => i.type == [armor.type] ) === undefined) {
+		if (armor.rarity >= get(rarityTolerance)) {
+			if ( get(body).find( i => i.type == [armor.type] ) === undefined) {
 				//console.log("pick up and arm "+ armor.material);
 				addPlayerAlert(`+ new ${armor.material} armor`);
 				pickUpItem(armor, id);
 				armItem(0);
 			}
-			else if ( ($carryCapacity - $carryAmount) >= armor.size) {
+			else if ( (carryCapacity - carryAmount) >= armor.size) {
 				//console.log("pick up and store "+ armor.material+" "+armor.name);
 				addPlayerAlert(`+ new ${armor.material} armor`);
 				pickUpItem(armor, id);
@@ -269,7 +287,7 @@ var timerVar;
 function clearPlayerAlerts () {
 	clearTimeout( timerVar );
 	timerVar = setInterval( () => { 
-		store.dispatch( playerFlashOver() );
-		$alert.length === 0 ? clearTimeout(timerVar) : null ;
-		}, biggest( (900-($alert.length*100)), 200 ) );
+		playerFlashOver();
+		get(alerts).length === 0 ? clearTimeout(timerVar) : null ;
+		}, biggest( (900-(get(alerts).length*100)), 200 ) );
 }

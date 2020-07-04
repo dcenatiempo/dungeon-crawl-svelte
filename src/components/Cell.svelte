@@ -1,48 +1,35 @@
 <script>
-import { level, locale } from '../store/player';
-import { monsters, isAliveMonster, isDeadMonster } from '../store/monsters';
-import { isInBounds,  } from '../lib/helpers';
+import { locale } from '../store/player';
+import { monsters, isAnyMonster, isAliveMonster, isDeadMonster } from '../store/monsters';
 import { tileSize, toolTip, mouseX, mouseY, toolTipObject } from '../store/app';
 import { world } from '../store/world';
 
 export let cell;
 export let isPlayer;
+export let mID;
+export let level;
+export let inBounds;
 
-const currentWorld = $world[$level];
-let mID = isAnyMonster(cell);
-let inBounds = isInBounds(cell, currentWorld);
-let tile = inBounds
-	? currentWorld[cell[0]][cell[1]]
+$: tile = inBounds
+	? $world[level][cell[0]][cell[1]]
 	: null;
-$: classes = !inBounds
+
+$: classes = !tile
 	? ""
 	: tile.type +
 			" vis-" + tile.vis +
 			(tile.fog >= 1 ? " fog" : 
 				( !isPlayer ? "" : " player" ) +
 				( mID === false ? "" :
-					( isAliveMonster(cell, currentWorld) !== false ?
-						( monster[mID].flash ? " monster damaged": " monster" ) :
-						( isDeadMonster(cell, currentWorld) === false ? "" : " dead" )
+					( isAliveMonster(cell, $monsters[level]) !== false ?
+						( $monsters[level][mID].flash ? " monster damaged": " monster" ) :
+						( isDeadMonster(cell, $monsters[level]) === false ? "" : " dead" )
 					)
 				)
-			)
+			);
 
 let styles = `height: ${$tileSize}px;	width: ${$tileSize}px`;
-let id = `${cell[0]},${cell[1]}`
-
-function isAnyMonster(target){
-	const monstersOnLevel = monsters[level];
-	let mIndex = false;
-	if (monstersOnLevel === undefined) {
-		return mIndex;
-	}
-	monstersOnLevel.forEach((monster, index) => {
-		if (target[0] == monster.locale[0] && target[1] == monster.locale[1]) {
-				mIndex = index;
-	}});
-	return mIndex;
-}
+$: id = `${cell[0]},${cell[1]}`
 
 function toggleToolTip(x, y, obj) {
 	toolTip.set(!toolTip)
@@ -53,7 +40,7 @@ function toggleToolTip(x, y, obj) {
 
 function inspectorClick (e) {
 		const target = e.target.id.split(",")
-		const tile = currentWorld[target[0]][target[1]];
+		const tile = $world[level][target[0]][target[1]];
 		//console.log(target)
 		//console.log(tile.type)
 		// if (isPlayer(target, locale)) {

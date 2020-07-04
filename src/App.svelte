@@ -11,12 +11,12 @@
 	import Header from './components/Header.svelte';
 	import World from './components/World.svelte';
 
-	import { getExpFromMonst } from './lib/helpers';
+	import { getExpFromMonst, battle } from './lib/helpers';
 	import { sleep } from './lib/utilities';
 
 	// $: console.log($tileSize)
 	// $: console.log($grid)
-	$: console.log($locale)
+	// $: console.log($locale)
 
 	function movePlayerAction(target) {
 		movePlayer(target);
@@ -26,13 +26,13 @@
 	onMount(() => {
 		window.addEventListener('keydown', handleKeypress)
 		movesRemain.subscribe(val => {
-			if (!val) {
+			if (val <= 0) {
 				//this.props.resetPlayerMoves();
 				// check to see if any monsters on non-foggy squares
 				let countMonst = 0;
 				const currentWorld = $world[$level];
 				const currentMonsters = $monsters[$level];
-				currentMonsters.reduce((mList, m, i)=>{
+				currentMonsters.reduce((mList, m, i) => {
 					if ( currentWorld[m.locale[0]][m.locale[1]].fog === 0 && m.health > 0) {
 						countMonst++
 						mList.push(i)
