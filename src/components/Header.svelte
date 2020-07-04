@@ -1,22 +1,24 @@
 <script>
+import { get } from 'svelte/store';
+
 import { expLevel, experience, health, maxHealth, movesRemain, attacksRemain, bag } from '../store/player'
-import { rarityTolerance } from '../store/app';
+import { rarityTolerance, displayGear } from '../store/app';
+
 function toggleGear() {
-		// store.dispatch( toggleGearMenuAction() );
-	}
+	displayGear.set(!get(displayGear));
+}
 	
 function toggleMarket () {
-	// store.dispatch( toggleMarketMenuAction() );
+	displayMarket.set(!get(displayMarket));
 }
 
 function changeRarity (e) {
-	// console.log("changing rarity tolerance to "+e.target.value)
-	// this.props.changeRarityTolerance(e.target.value)
+	rarityTolerance.set(e.target.value);
 }
 </script>
 
 <div class="header1-grid header flex-row">
-	<button onClick={toggleGear}>Gear</button>
+	<button on:click={toggleGear}>Gear</button>
 	<div>
 		Rarity Tolerance<input
 			class="slider"
@@ -25,7 +27,7 @@ function changeRarity (e) {
 			min={1}
 			max={10}
 			step={1}
-			onChange={changeRarity} />
+			on:change={changeRarity} />
 	</div>
 	<div class="flex-col">
 		<div>Level: {$expLevel}</div>
@@ -33,7 +35,7 @@ function changeRarity (e) {
 	</div>
 	<div class="flex-col">
 		<div>Health: {$health}/{$maxHealth}</div>
-		<div>Gold: {$bag[1].amount}</div>
+		<div>Gold: {$bag[0].amount}</div>
 	</div>
 	<div class="flex-col">
 		<div>Moves Remain: {$movesRemain}</div>
@@ -46,7 +48,16 @@ $thumb-height: 20px;
 $thumb-width: 20px;
 $slider-width: 20%;
 $slider-height: 5px;
+$header-height: 50px;
 
+.header {
+	background: black;
+	color: lightgray;
+	width: 100%;
+	height: $header-height;
+	justify-content: space-around;
+	padding: 5px;
+}
 .header1-grid {
 	grid-column: 1 / 4;
 	grid-row: 1;

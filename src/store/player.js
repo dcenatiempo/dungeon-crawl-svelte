@@ -25,6 +25,7 @@ export {
 	// derived
 	expLevel,
 	maxHealth,
+	hunger,
 	maxAttacks,
 	attackPoints,
 	defense,
@@ -42,6 +43,12 @@ export {
 	addPlayerAlert,
 	clearPlayerAlerts,
 	pickUpItems,
+	pickUpItem,
+	storeItem,
+	armItem,
+	removeItem,
+	pullItem,
+	dropItem,
 	resetMoves,
 }
 
@@ -56,7 +63,7 @@ const intel = writable(5); // Dodge, Attack
 const experience = writable(0);	// used to calculate player level
 const movesRemain = writable(2); // MaxMoves minus moves already taken
 const attacksRemain = writable(2); // MaxAttacks minus attacks already taken
-const health = writable(0);	// MaxHealth minus damage taken
+const health = writable(20);	// MaxHealth minus damage taken
 const body = writable([			
 	{
 		type: 'ring',
@@ -97,13 +104,14 @@ const alerts =	writable([]); //['+5 Food', '+20 Gold',
 
 const expLevel = derived(experience, $experience => Math.floor((-1+Math.sqrt(1+8*$experience/50))/2)+1);
 const maxHealth = derived([strength, tenacity, expLevel], ([$strength, $tenacity, $expLevel]) => ($strength+$tenacity)*($expLevel+1));
+const hunger = derived([maxHealth, health], ([$maxH, $h]) => $maxH -$h)
 const attackPoints = derived([strength, intel, body], ([$strength, $intel, $body]) => Math.round(
 	($strength + $intel)
 	* ( ( $body.filter(i=>i.type==='weapon')[0].attack + 10 ) / 10 )
 	* ( ( getExpLevel(char) + 1 ) / 4)));
 const defense = derived([body], ([$body]) => $body.reduce((sum,i)=> {return sum+ i.defense},0));
 const dodge = derived([speed, intel], ([$speed, $intel]) => $speed*$intel)
-const maxMoves = derived([speed, tenacity], ([$speed, $tenacity]) => ($speed + $tenacity*2)/4);
+const maxMoves = derived([speed, tenacity], ([$speed, $tenacity]) => Math.ceil(($speed + $tenacity*2)/4));
 const maxAttacks = derived([speed, body, maxMoves], ([$speed, $body, $maxMoves]) => smallest(Math.ceil(($speed + $body.filter(i=>i.type==='weapon')[0].speed)/5), $maxMoves));
 const carryCapacity = derived(strength, ($strength) => 10 + $strength*2);
 const carryAmount = derived(bag, $bag => {			
@@ -203,6 +211,47 @@ function armItem(i) {
 	body.set(newBody);
 	hand.set(newHand);
 	movesRemain.set(get(movesRemain) - 1);		
+}
+
+function removeItem(i) {
+	const currentItem = get(body)[i];
+	let newHand = get(hand).map(item => item);
+	newHand.push(currentItem);
+	const newBody = get(body).map(item => item);
+	if (currentItem.type === 'weapon')
+		newBody.splice(i, 1, weaponList[0]);
+	else
+		newBody.splice(i, 1);
+	
+	body.set(newBody);
+	hand.set(newHand);
+}
+
+function pullItem(i, amount) {
+	const handItem = { ...get(bag)[i] };
+	if (handItem.hasOwnProperty('amount')) {
+			handItem.amount = amount;
+	}
+	let newHand = get(hand).map(item => item);
+	newHand.push(handItem);
+
+	let newBag;
+	if (handItem.type === 'food' || handItem.type === 'gold')
+		// if food/gold reduce amount of item
+		newBag = get(bag).map(item => item.type === handItem.type ? { ...item, amount: item.amount - amount } : item );
+	else {
+		// else remove item
+		newBag = get(bag).map(item => item)
+		newBag.splice(i, 1);
+	}
+	bag.set(newBag);
+	hand.set(newHand);
+}
+
+function dropItem(i) {
+	let newHand = get(hand).map(item => item);
+	newHand.splice(i, 1);
+	hand.set(newHand);
 }
 
 function pickUpItems (target, currentMonsters) {

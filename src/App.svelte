@@ -1,7 +1,9 @@
 <script>
+  import { get } from 'svelte/store';
 	import { onMount } from 'svelte';
+	import { fade } from 'svelte/transition';
 
-	import { dimensions, tileSize, grid, displayMarket } from './store/app.js';
+	import { dimensions, tileSize, grid, displayMarket, displayGear } from './store/app.js';
 	import { world, currentWorld, updateVisibility, addNewLevel } from './store/world.js';
 	import { monsters, populateLevel, monsterLoseHealth, isAliveMonster, isDeadMonster, monsterTurn } from './store/monsters.js';
 	import { level, locale, movePlayer, changeLevel, gainExperience, clearPlayerAlerts, pickUpItems, movesRemain, attacksRemain, resetMoves } from './store/player.js';
@@ -10,6 +12,8 @@
 	
 	import Header from './components/Header.svelte';
 	import World from './components/World.svelte';
+	import Bag from './components/Bag.svelte';
+	import Gear from './components/Gear.svelte';
 
 	import { getExpFromMonst, battle } from './lib/helpers';
 	import { sleep } from './lib/utilities';
@@ -180,26 +184,29 @@
 <main>
 	<Header />
 	<World />
+	{#if $displayGear}
+	<sidebar transition:fade="{{ duration: 80 }}" class="left-sidebar-grid" id="l-sidebar">
+		<Bag />
+		<Gear />
+	</sidebar>
+	{/if}
 </main>
 
-<style>
-	main {
-		text-align: center;
-		padding: 1em;
-		max-width: 240px;
-		margin: 0 auto;
-	}
+<style type="text/scss">
+	$header-height: 50px;
 
-	h1 {
-		color: #ff3e00;
-		text-transform: uppercase;
-		font-size: 4em;
-		font-weight: 100;
+	.left-sidebar-grid {
+		z-index: 10;
+		position: fixed;
+		top: $header-height;
+		bottom: 0;
+		left: 0;
+		opacity: .85;
+		/* transition: opacity ease 500ms; */
 	}
-
-	@media (min-width: 640px) {
-		main {
-			max-width: none;
-		}
+	.right-sidebar-grid {
+		grid-column: 3;
+		grid-row: 2 / 4;
+		z-index: 10;
 	}
 </style>

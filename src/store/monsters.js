@@ -41,7 +41,7 @@ const monsters = writable([[
 	createMonster(monsterList[0][getRand(0,monsterList[0].length-1)], [8,8])]]);
 
 function populateLevel(toLevel) {
-	let newMonsterList = JSON.parse(JSON.stringify(get(monsters)));
+	let newMonsters = JSON.parse(JSON.stringify(get(monsters)));
 	let monsterLevelList = [];
 	let currentWorld = get(world)[toLevel];
 	let remainder = toLevel%townEvery;
@@ -49,7 +49,7 @@ function populateLevel(toLevel) {
 	for (let r=1; r<currentWorld.length-2; r++) {
 		for (let c=1; c<currentWorld.length-2; c++) {
 			if (currentWorld[r][c].type === 'gate' && remainder == (townEvery - 1) && currentWorld[r][c].toLevel === toLevel+1) {
-				monsterLevelList.push(createMonster($monsterList[3][getRand(0,$monsterList[3].length-1)], [r,c]));//zzzzz
+				monsterLevelList.push(createMonster(monsterList[3][getRand(0,monsterList[3].length-1)], [r,c]));
 			}
 			if (currentWorld[r][c].type === 'floor') {
 				if (getRand(0,50) === 0) { // 1 monster every 50 squares
@@ -83,8 +83,8 @@ function populateLevel(toLevel) {
 			}
 		}
 	}
-	newMonsterList.push(monsterLevelList);
-	monsters.set(newMonsterList);
+	newMonsters.push(monsterLevelList);
+	monsters.set(newMonsters);
 }
 
 function moveMonster(id, target) {

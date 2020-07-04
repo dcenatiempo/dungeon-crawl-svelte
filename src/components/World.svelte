@@ -6,7 +6,7 @@ import { level, locale } from '../store/player';
 import { monsters, isAnyMonster, isAliveMonster, isDeadMonster } from '../store/monsters';
 
 // $: console.log('lasagna', $monsters[$level][0])
-$: console.log('level', $level)
+// $: console.log('level', $level)
 
 </script>
 

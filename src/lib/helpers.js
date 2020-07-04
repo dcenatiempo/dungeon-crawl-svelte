@@ -1,9 +1,11 @@
 import { get } from 'svelte/store';
 
-import { getRand, smallest, sleep } from './utilities';
+import { getRand, smallest, biggest, sleep } from './utilities';
 import { weaponList, materialList, gearList } from '../store/constants';
 import { currentWorld } from '../store/world';
 import { monsters, monsterFlashOver } from '../store/monsters';
+import { bag, intel } from '../store/player';
+
 import {
 	level,
 	attackPoints as playerAttackPoints,
@@ -13,6 +15,7 @@ import {
 } from '../store/player';
 
 export {
+	getName,
 	getExpLevel,
 	getAttackPoints,
 	getDefense,
@@ -34,6 +37,19 @@ export {
 	createTownLevel,
 	createMarket,
 	battle,
+}
+
+function getName(item) {
+	if (item.type === 'weapon' || item.type ==='ring') // weapon
+		return item.name;
+	else if(item.type === 'gold')
+		return "$"+item.amount;
+	else if(item.type === 'food')
+		return item.amount + " oz meat"
+	else if (!item.hasOwnProperty('name')) // gold/food/rock
+		return item.type
+	else // armor
+		return item.material + " " + item.name;
 }
 
 // returns char level
@@ -71,12 +87,10 @@ function getCarryAmount(char) {
 function getMarketPrice (item) { return getPrice(item, 1.25); }
 function getPlayerPrice (item) { return getPrice(item, .75); }
 function getPrice (item, dif) {
-	let player = store.getState().player; 
-	let intel = player.intel;
 	let price;
 	let rarity;
 	if (item.type === 'food') {
-		let pFood = player.bag.filter( thing => thing.type === 'food' )[0].amount
+		let pFood = get(bag).filter( thing => thing.type === 'food' )[0].amount
 		let mFood = item.amount
 		rarity = biggest(1, (8 - Math.round( (pFood + mFood) / 25 ) ) )
 		price = rarity/10;
@@ -86,26 +100,28 @@ function getPrice (item, dif) {
 		price = item.rarity*20;
 		price = price*dif
 		if (dif>0)
-			price = Math.round(price * ( 1 - (intel-1)*.05 ));
+			price = Math.round(price * ( 1 - (get(intel)-1)*.05 ));
 		return Math.round(price*10)/10;
 	}
 }
-// given char(acter) returns max moves
-function getMaxMoves(char) {
+
+// given monster returns max moves
+function getMaxMoves(monster) {
 	// speed, tenacity
-	return Math.round((char.speed + char.tenacity*2)/4);
+	return Math.round((monster.speed + monster.tenacity*2)/4);
 }
-// given char(acter) returns max moves
-function getMaxAttacks(char) {
-	if (char.type === 'player' )
-		 return smallest(Math.ceil((char.speed + char.body.filter(i=>i.type==='weapon')[0].speed)/5),getMaxMoves(char));
-	else return smallest(Math.ceil((char.speed + char.weapon.speed)/5),getMaxMoves(char));
+
+// given monster returns max moves
+function getMaxAttacks(monster) {
+	return smallest(Math.ceil((monster.speed + monster.weapon.speed)/5),getMaxMoves(monster));
 }
-// given char(acter) returns max health
+
+// given monster returns max health
 function getMaxHealth( char ) {
 	//TODO: strength, tenacity, level
 	return (char.strength+char.tenacity)*(getExpLevel(char)+1)+(char.hasOwnProperty('type') ? 0 : 30);
 }
+
 // given monster, returns that monsters experience points
 function getExpFromMonst(monster){
 	return Math.round((monster.strength + monster.tenacity + monster.speed + monster.intel)*(getExpLevel(monster)+1)/3);
@@ -294,8 +310,6 @@ function createMarket (level) {
 		let armor = getArmor(true, level )
 		market[0].bag.push( armor );
 	}
-	console.log("market:")
-	console.log(market)
 	return market
 }
 
