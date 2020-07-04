@@ -184,10 +184,10 @@ function storeItem(index) {
 	hand.set(newHand);
 }
 
-function armItem(item) {
-	const currentItem = get(hand)[index];
+function armItem(i) {
+	const currentItem = get(hand)[i];
 	let newHand = get(hand).map(item => item);
-	newHand.splice(index, 1);
+	newHand.splice(i, 1);
 	if (currentItem.type === 'food') {
 		health.set(get(health) + currentItem.amount);
 		hand.set(newHand);

@@ -3,6 +3,7 @@ import { monsterList } from './constants';
 import { world } from './world';
 import { getRand, add } from '../lib/utilities';
 import { level, locale, loseHealth as playerLoseHealth, clearPlayerAlerts } from './player';
+import { rarityTolerance } from './app';
 import { randomGold, getArmor, getWeapon, getMaxMoves, getMaxHealth, getMaxAttacks, isPlayer, battle } from '../lib/helpers';
 
 const townEvery = 5;
@@ -107,7 +108,7 @@ function takeItemFromMonster(item, id) {
 	let newMonster = newMonsters[get(level)][id];
 	if (item.type === 'food' || item.type === 'gold')
 		newMonster[item.type] -= item.amount;
-	else if (action.item.type === 'weapon')
+	else if (item.type === 'weapon')
 		newMonster.weapon = weaponList[0];
 	else
 		newMonster.armor = 'no armor';
@@ -155,7 +156,7 @@ function isDeadMonster(target, monstersOnLevel){ // monster is dead, but has use
 	}
 	monstersOnLevel.forEach((monster, index) => {
 		if (target[0] == monster.locale[0] && target[1] == monster.locale[1]) {
-				if (monster.health<=0 && (monster.food>0 || monster.gold>0 || (monster.weapon.name != 'fist' && monster.armor.rarity >= store.getState().settings.rarityTolerance) || (monster.armor.name != 'no armor' && monster.armor.rarity >= store.getState().settings.rarityTolerance)))
+				if (monster.health<=0 && (monster.food>0 || monster.gold>0 || (monster.weapon.name != 'fist' && monster.armor.rarity >= get(rarityTolerance)) || (monster.armor.name != 'no armor' && monster.armor.rarity >= get(rarityTolerance))))
 					mIndex = index;
 	}});
 	return mIndex;
