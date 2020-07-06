@@ -16,13 +16,14 @@ export {
 const market = writable(createMarket(0));
 
 function populateMarket(level) {
-	const newMarket = JSON.parse(JSON.stringify($market));
+	const newMarket = JSON.parse(JSON.stringify(get(market)));
 	newMarket.push(createMarket(level)[0]);
 	market.set(newMarket);
 }
 
-function buy({ level, gold, item }) {
-	const newMarket = JSON.parse(JSON.stringify($market));
+function buy(level, gold, item) {
+	debugger
+	const newMarket = JSON.parse(JSON.stringify(get(market)));
 	if (item.type === 'food')
 	  newMarket[level].bag[0].amount += 1;
 	else newMarket[level].bag.push(item);
@@ -31,8 +32,9 @@ function buy({ level, gold, item }) {
 	market.set(newMarket);
 }
 
-function sell({ level, gold, item}) {
-	const newMarket = JSON.parse(JSON.stringify($market));
+function sell(level, gold, id) {
+	const newMarket = JSON.parse(JSON.stringify(get(market)));
+	debugger
 	if (id == 0)
 		newMarket[level].bag[0].amount -= 1;
 	else newMarket[level].bag.splice(id, 1);

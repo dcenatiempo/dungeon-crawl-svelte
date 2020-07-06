@@ -14,6 +14,7 @@
 	import World from './components/World.svelte';
 	import Bag from './components/Bag.svelte';
 	import Gear from './components/Gear.svelte';
+	import Market from './components/Market.svelte';
 
 	import { getExpFromMonst, battle } from './lib/helpers';
 	import { sleep } from './lib/utilities';
@@ -21,6 +22,7 @@
 	// $: console.log($tileSize)
 	// $: console.log($grid)
 	// $: console.log($locale)
+	let displaySetByMarket = false;
 
 	function movePlayerAction(target) {
 		movePlayer(target);
@@ -121,8 +123,10 @@
 		// if targetCell is a wall...
 
 		if (currentWorld[currCell[0]][currCell[1]].type === 'market') {
-			// if (this.props.settings.displayMarket)
-			// 	store.dispatch( toggleMarketMenuAction() );
+			if (currentWorld[tarCell[0]][tarCell[1]].type !== 'market')
+				displayMarket.set(false);
+			if (displaySetByMarket)
+			  displayGear.set(false);
 		}
 			
 		if (currentWorld[tarCell[0]][tarCell[1]].type === 'wall') {
@@ -146,8 +150,15 @@
 		else if (currentWorld[tarCell[0]][tarCell[1]].type === 'market') {
 			console.log("lets barter!");
 			movePlayerAction(tarCell);
-			if (!$displayMarket)
+			if (!$displayMarket) {
 				displayMarket.set(true);
+			}
+			if (!$displayGear) {
+				displaySetByMarket = true;
+				displayGear.set(true);
+			} else {
+				displaySetByMarket = false;
+			}
 		}
 		// if targetCell is a monster...
 		else if (isAliveMonster(tarCell, currentMonsters) !== false ) {
@@ -185,10 +196,15 @@
 	<Header />
 	<World />
 	{#if $displayGear}
-	<sidebar transition:fade="{{ duration: 80 }}" class="left-sidebar-grid" id="l-sidebar">
-		<Bag />
-		<Gear />
-	</sidebar>
+		<sidebar transition:fade="{{ duration: 80 }}" class="left-sidebar-grid" id="l-sidebar">
+			<Bag />
+			<Gear />
+		</sidebar>
+	{/if}
+	{#if $displayMarket}
+		<sidebar transition:fade="{{ duration: 80 }}" class="right-sidebar-grid" id="r-sidebar">
+			<Market />
+		</sidebar>
 	{/if}
 </main>
 
@@ -202,11 +218,13 @@
 		bottom: 0;
 		left: 0;
 		opacity: .85;
-		/* transition: opacity ease 500ms; */
 	}
 	.right-sidebar-grid {
-		grid-column: 3;
-		grid-row: 2 / 4;
 		z-index: 10;
+		position: fixed;
+		top: $header-height;
+		bottom: 0;
+		right: 0;
+		opacity: .85;
 	}
 </style>

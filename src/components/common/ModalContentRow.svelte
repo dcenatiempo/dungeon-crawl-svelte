@@ -14,6 +14,7 @@
 		body,
 		carryCapacity,
 		carryAmount,
+		goldCarryCapacity
 	} from '../../store/player';
 	import { market, buy, sell } from '../../store/market';
 	import { getName, getPlayerPrice, getMarketPrice } from '../../lib/helpers';
@@ -26,10 +27,14 @@
 
 	function sellItem(e) {
 		let level = get(playerLevel);
+		debugger
 		let marketId = level/townEvery;
 		let id = e.target.id
 		let gold = getPlayerPrice(item);
-		pickUpItem({ type: 'gold', amount: smallest(gold, goldCarryCapacity) }, null);
+		let goldCapacity = get(goldCarryCapacity);
+		let amount = Math.round(smallest(gold, goldCapacity) * 100)/100;
+		
+		pickUpItem({ type: 'gold', amount }, null);
 		storeItem(0);
 		
 		if (box === 'body')

@@ -126,8 +126,8 @@ const carryAmount = derived(bag, $bag => {
 	return bagItems;
 });
 const totalFoodCapacity = derived([maxHealth, health, carryCapacity, carryAmount], ([$maxH, $h, $capacity, $amount]) => ($maxH - $h) + ($capacity - $amount*10)); // belly + bag capacity
-const goldCarryCapacity = derived([carryCapacity, carryAmount], ([$capacity, $amount]) => $capacity - $amount*50);
-const foodCarryCapacity = derived([carryCapacity, carryAmount], ([$capacity, $amount]) => $capacity - $amount*10); // bag food capacity
+const goldCarryCapacity = derived([carryCapacity, carryAmount], ([$capacity, $amount]) => ($capacity - $amount)*50);
+const foodCarryCapacity = derived([carryCapacity, carryAmount], ([$capacity, $amount]) => ($capacity - $amount)*10); // bag food capacity
 
 function movePlayer(target) {
 	locale.set(target)
