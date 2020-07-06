@@ -66,12 +66,12 @@ function getAttackPoints(monster) {
 		* ( ( monster.weapon.attack + 10 ) / 10 )
 		* ( ( getExpLevel(monster) + 1 ) / 4));
 }
-function getDefense(char) {
-	return (char.weapon.defense) + (char.armor.defense);
+function getDefense(monster) {
+		return (monster.tenacity + monster.strength + monster.weapon.defense + monster.armor.defense) / 100;
 }
-function getDodge(char) {
+function getDodge(monster) {
 	// speed, intel //TODO: account for ring of agility
-	return char.speed * char.intel;
+	return monster.speed * monster.intel;
 }
 
 function getCarryAmount(char) {					
@@ -317,22 +317,21 @@ function createMarket (level) {
 // attacker is boolean that answers "is the monster the attacker?"
 function battle(i, attacker) {
 	const monster = get(monsters)[get(level)][i];
-
 	let attackPoints = attacker
 		? getAttackPoints(monster)
-		: playerAttackPoints;
+		: get(playerAttackPoints);
 
-	let defense = attacker
+	let defense = !attacker
 		? getDefense(monster)
-		: playerDefense;
+		: get(playerDefense);
 
-	let dodge = attacker
+	let dodge = !attacker
 		? getDodge(monster)
-		: playerDodge;
+		: get(playerDodge);
 
-	let damage = Math.round(attackPoints * (1 - defense / 100));
+	let damage = Math.round(attackPoints * (1 - defense));
 
-	console.log(attackPoints+ " attack -"+(defense / 100)+"% defence = "+damage+" damage")
+	console.log(attackPoints+ " attack -"+defense+"% defense = "+damage+" damage")
 
 	//If defender dodges attacke, no damage is done
 	if ( getRand(0,100) <= dodge) {

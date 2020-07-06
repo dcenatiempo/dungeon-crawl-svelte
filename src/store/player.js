@@ -105,11 +105,11 @@ const alerts =	writable([]); //['+5 Food', '+20 Gold',
 const expLevel = derived(experience, $experience => Math.floor((-1+Math.sqrt(1+8*$experience/50))/2)+1);
 const maxHealth = derived([strength, tenacity, expLevel], ([$strength, $tenacity, $expLevel]) => ($strength+$tenacity)*($expLevel+1));
 const hunger = derived([maxHealth, health], ([$maxH, $h]) => $maxH -$h)
-const attackPoints = derived([strength, intel, body], ([$strength, $intel, $body]) => Math.round(
+const attackPoints = derived([strength, intel, body, expLevel], ([$strength, $intel, $body, $expLevel]) => Math.round(
 	($strength + $intel)
 	* ( ( $body.filter(i=>i.type==='weapon')[0].attack + 10 ) / 10 )
-	* ( ( getExpLevel(char) + 1 ) / 4)));
-const defense = derived([body], ([$body]) => $body.reduce((sum,i)=> {return sum+ i.defense},0));
+	* ( ( $expLevel + 1 ) / 4)));
+const defense = derived([body, tenacity, strength], ([$body, $t, $s]) => ($t + $s + $body.reduce((sum,i)=> {return sum+ i.defense},0)) / 100);
 const dodge = derived([speed, intel], ([$speed, $intel]) => $speed*$intel)
 const maxMoves = derived([speed, tenacity], ([$speed, $tenacity]) => Math.ceil(($speed + $tenacity*2)/4));
 const maxAttacks = derived([speed, body, maxMoves], ([$speed, $body, $maxMoves]) => smallest(Math.ceil(($speed + $body.filter(i=>i.type==='weapon')[0].speed)/5), $maxMoves));
