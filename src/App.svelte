@@ -171,7 +171,9 @@
 				//console.log("Attack "+currentMonsters[m].type+"!");
 				let damage = battle(m, false);
 				monsterLoseHealth(m, damage);
-				if (isAliveMonster(tarCell, currentMonsters) === false) {
+				currentMonsters = $monsters[$level];
+				const monsterKilled = isAliveMonster(tarCell, currentMonsters) === false;
+				if (monsterKilled) {
 					//console.log("earn experience "+getExpFromMonst(currentMonsters[m]))
 					//this.props.addPlayerAlert(("+"+getExpFromMonst(currentMonsters[m])+" experience"))
 					gainExperience(getExpFromMonst(currentMonsters[m]))
