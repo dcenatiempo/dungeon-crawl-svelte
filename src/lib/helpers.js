@@ -4,7 +4,7 @@ import { getRand, smallest, biggest, sleep } from './utilities';
 import { weaponList, materialList, gearList } from '../store/constants';
 import { currentWorld } from '../store/world';
 import { monsters, monsterFlashOver } from '../store/monsters';
-import { bag, intel } from '../store/player';
+import { bag, intel, player } from '../store/player';
 
 import {
 	level,
@@ -54,24 +54,36 @@ function getName(item) {
 
 // returns char level
 function getExpLevel (char) {
+	if (char.type === 'player') {
+		return get(player).expLevel
+	}
 	if (typeof store === 'undefined') {
 			return 1;
 	}
 	return level+1;
 }
 // returns attack points of character
-function getAttackPoints(monster) {
+function getAttackPoints(char) {
+	if (char.type === 'player') {
+		return get(player).attackPoints;
+	}
 	return Math.round(
-		(monster.strength + monster.intel)
-		* ( ( monster.weapon.attack + 10 ) / 10 )
-		* ( ( getExpLevel(monster) + 1 ) / 4));
+		(char.strength + char.intel)
+		* ( ( char.weapon.attack + 10 ) / 10 )
+		* ( ( getExpLevel(char) + 1 ) / 4));
 }
-function getDefense(monster) {
-		return (monster.tenacity + monster.strength + monster.weapon.defense + monster.armor.defense) / 100;
+function getDefense(char) {
+	if (char.type === 'player') {
+		return get(player).defense;
+	}
+	return (char.tenacity + char.strength + char.weapon.defense + char.armor.defense) / 100;
 }
-function getDodge(monster) {
+function getDodge(char) {
+	if (char.type === 'player') {
+		return get(player).dodge;
+	}
 	// speed, intel //TODO: account for ring of agility
-	return monster.speed * monster.intel;
+	return char.speed * char.intel;
 }
 
 function getCarryAmount(char) {					
@@ -105,19 +117,28 @@ function getPrice (item, dif) {
 	}
 }
 
-// given monster returns max moves
-function getMaxMoves(monster) {
+// given char returns max moves
+function getMaxMoves(char) {
+	if (char.type === 'player') {
+		return get(player).maxMoves;
+	}
 	// speed, tenacity
-	return Math.round((monster.speed + monster.tenacity*2)/4);
+	return Math.round((char.speed + char.tenacity*2)/4);
 }
 
-// given monster returns max moves
-function getMaxAttacks(monster) {
-	return smallest(Math.ceil((monster.speed + monster.weapon.speed)/5),getMaxMoves(monster));
+// given char returns max moves
+function getMaxAttacks(char) {
+	if (char.type === 'player') {
+		return get(player).maxAttacks;
+	}
+	return smallest(Math.ceil((char.speed + char.weapon.speed)/5),getMaxMoves(char));
 }
 
-// given monster returns max health
+// given char returns max health
 function getMaxHealth( char ) {
+	if (char.type === 'player') {
+		return get(player).maxHealth;
+	}
 	//TODO: strength, tenacity, level
 	return (char.strength+char.tenacity)*(getExpLevel(char)+1)+(char.hasOwnProperty('type') ? 0 : 30);
 }

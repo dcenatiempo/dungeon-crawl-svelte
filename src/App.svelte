@@ -3,7 +3,7 @@
 	import { onMount } from 'svelte';
 	import { fade } from 'svelte/transition';
 
-	import { dimensions, tileSize, grid, displayMarket, displayGear } from './store/app.js';
+	import { toolTip, dimensions, tileSize, grid, displayMarket, displayGear } from './store/app.js';
 	import { world, currentWorld, updateVisibility, addNewLevel } from './store/world.js';
 	import { monsters, populateLevel, monsterLoseHealth, isAliveMonster, isDeadMonster, monsterTurn } from './store/monsters.js';
 	import { level, locale, movePlayer, changeLevel, gainExperience, clearPlayerAlerts, pickUpItems, movesRemain, attacksRemain, resetMoves, useAttack } from './store/player.js';
@@ -15,13 +15,11 @@
 	import Bag from './components/Bag.svelte';
 	import Gear from './components/Gear.svelte';
 	import Market from './components/Market.svelte';
-
+	import Inspector from './components/Inspector.svelte';
+	
 	import { getExpFromMonst, battle } from './lib/helpers';
 	import { sleep } from './lib/utilities';
 
-	// $: console.log($tileSize)
-	// $: console.log($grid)
-	// $: console.log($locale)
 	let displaySetByMarket = false;
 
 	function movePlayerAction(target) {
@@ -52,10 +50,6 @@
 			}
 		})
 	});
-
-	
-
-	
 
 	function handleKeypress(e) {
 		function getCoords(fromLevel, toLevel){
@@ -214,6 +208,9 @@
 	<h1 class="dungeon-title footer-grid">
 		{$level%townEvery === 0 ? "Town": "Dungeon" } Level {$level+1}
 	</h1>
+	{#if $toolTip}
+		<Inspector />
+	{/if}
 </main>
 
 <style type="text/scss">

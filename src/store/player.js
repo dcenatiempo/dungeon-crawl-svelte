@@ -5,6 +5,7 @@ import { weaponList } from './constants';
 import { biggest, smallest } from '../lib/utilities';
 
 export {
+	player,
 	type,
 	name,
 	level,
@@ -129,6 +130,29 @@ const carryAmount = derived(bag, $bag => {
 const totalFoodCapacity = derived([maxHealth, health, carryCapacity, carryAmount], ([$maxH, $h, $capacity, $amount]) => ($maxH - $h) + ($capacity - $amount*10)); // belly + bag capacity
 const goldCarryCapacity = derived([carryCapacity, carryAmount], ([$capacity, $amount]) => ($capacity - $amount)*50);
 const foodCarryCapacity = derived([carryCapacity, carryAmount], ([$capacity, $amount]) => ($capacity - $amount)*10); // bag food capacity
+
+const player = derived(
+	[strength, speed, intel, tenacity, health, defense, attackPoints, dodge, maxMoves, maxAttacks, carryCapacity, carryAmount, totalFoodCapacity, goldCarryCapacity, foodCarryCapacity, expLevel, experience, type, maxHealth], ([$a, $b, $c, $d, $e, $f, $g, $h, $i, $j, $k, $l, $m, $n, $o, $p, $q, $r, $s]) => ({
+		strength: $a,
+		speed: $b,
+		intel: $c,
+		tenacity: $d,
+		health: $e,
+		defense: $f,
+		attackPoints: $g,
+		dodge: $h,
+		maxMoves: $i,
+		maxAttacks: $j,
+		carryCapacity: $k,
+		carryAmount: $l,
+		totalFoodCapacity: $m,
+		goldCarryCapacity: $n,
+		foodCarryCapacity: $o,
+		expLevel: $p,
+		experience: $q,
+		type: $r,
+		maxHealth: $s, 
+	}));
 
 function movePlayer(target) {
 	locale.set(target)

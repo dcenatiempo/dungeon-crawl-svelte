@@ -1,8 +1,11 @@
 <script>
-import { locale } from '../store/player';
+import { get } from 'svelte/store';
+import { locale, player } from '../store/player';
 import { monsters, isAnyMonster, isAliveMonster, isDeadMonster } from '../store/monsters';
 import { tileSize, toolTip, mouseX, mouseY, toolTipObject } from '../store/app';
 import { world } from '../store/world';
+import { townEvery } from '../store/constants';
+import { market } from '../store/market';
 
 export let cell;
 export let isPlayer;
@@ -32,7 +35,7 @@ let styles = `height: ${$tileSize}px;	width: ${$tileSize}px`;
 $: id = `${cell[0]},${cell[1]}`
 
 function toggleToolTip(x, y, obj) {
-	toolTip.set(!toolTip)
+	toolTip.set(!get(toolTip))
 	mouseX.set(x)
 	mouseY.set(y)
 	toolTipObject.set(obj);
@@ -40,26 +43,29 @@ function toggleToolTip(x, y, obj) {
 
 function inspectorClick (e) {
 		const target = e.target.id.split(",")
-		const tile = $world[level][target[0]][target[1]];
-		//console.log(target)
-		//console.log(tile.type)
-		// if (isPlayer(target, locale)) {
-		// 	toggleToolTip(e.clientX, e.clientY, player);
-		// }
-		// else if (isAliveMonster(target) !== false) {
-		// 	let monster = currentMonsters[isAliveMonster(target)]
-		// 	toggleToolTip(e.clientX, e.clientY, player);
-		// }
-		// else if (isDeadMonster(target) !== false) {
-		// 	let corpse = currentMonsters[isDeadMonster(target)]
-		// 	toggleToolTip(e.clientX, e.clientY, corpse);
-		// }
-		// else if (tile.type === 'gate') {
-		// 	toggleToolTip(e.clientX, e.clientY, tile);
-		// }
-		// else if (tile.type === 'market' ) {
-		// 	toggleToolTip(e.clientX, e.clientY, currentMarket)
-		// }
+		const tile = get(world)[level][target[0]][target[1]];
+		// console.log(target)
+		// console.log(tile.type)
+		const currentMonsters = get(monsters)[level];
+		if (isPlayer) {
+			toggleToolTip(e.clientX, e.clientY, get(player));
+		}
+		else if (isAliveMonster(target, currentMonsters) !== false) {
+			debugger
+			let monster = currentMonsters[isAliveMonster(target, currentMonsters)]
+			toggleToolTip(e.clientX, e.clientY, monster);
+		}
+		else if (isDeadMonster(target, currentMonsters) !== false) {
+			let corpse = currentMonsters[isDeadMonster(target, currentMonsters)]
+			toggleToolTip(e.clientX, e.clientY, corpse);
+		}
+		else if (tile.type === 'gate') {
+			toggleToolTip(e.clientX, e.clientY, tile);
+		}
+		else if (tile.type === 'market' ) {
+			let currentMarket = get(market)[level/townEvery]
+			toggleToolTip(e.clientX, e.clientY, currentMarket)
+		}
 	}
 
 </script>
@@ -67,8 +73,8 @@ function inspectorClick (e) {
 	<div 
 		key={id}
 		id={id}
-		onMouseOver={inspectorClick}
-		onMouseLeave={inspectorClick}
+		on:mouseover={inspectorClick}
+		on:mouseleave={inspectorClick}
 		class={classes}
 		style={styles}
 		>

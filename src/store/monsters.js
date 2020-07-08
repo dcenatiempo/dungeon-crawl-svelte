@@ -133,11 +133,10 @@ function isAnyMonster(target, monstersOnLevel) {
 	return mIndex;
 }
 
-function isAliveMonster(target, monstersOnLevel){
+function isAliveMonster(target, monstersOnLevel) {
 	let mIndex = false;
 	if (monstersOnLevel === undefined) {
 		return mIndex;
-
 	}
 	monstersOnLevel.forEach((monster, index) => {
 		if (target[0] == monster.locale[0] && target[1] == monster.locale[1]) {
