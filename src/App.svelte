@@ -209,6 +209,9 @@
 			<Market />
 		</sidebar>
 	{/if}
+	<h1 class="dungeon-title footer-grid">
+		{$level%townEvery === 0 ? "Town": "Dungeon" } Level {$level+1}
+	</h1>
 </main>
 
 <style type="text/scss">
@@ -229,5 +232,17 @@
 		bottom: 0;
 		right: 0;
 		opacity: .85;
+	}
+
+	.dungeon-title {
+		color: lightgray;
+		text-align: center;
+		margin: 10px 0;
+	}
+	.footer-grid {
+		grid-column: 2 / 3;
+		grid-row: 2 / 3;
+		z-index: 20;
+		pointer-events: none;
 	}
 </style>

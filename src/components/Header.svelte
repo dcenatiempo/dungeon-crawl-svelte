@@ -23,7 +23,7 @@ function changeRarity (e) {
 		Rarity Tolerance<input
 			class="slider"
 			type="range"
-			defaultValue={rarityTolerance}
+			value="1"
 			min={1}
 			max={10}
 			step={1}
