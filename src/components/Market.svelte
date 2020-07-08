@@ -6,11 +6,9 @@
 	import { displayMarket } from '../store/app';
 	import { market } from '../store/market';
 	import { level } from '../store/player';
+	import { townEvery } from '../store/constants';
 
-	
-$: if(displayMarket) {
-	console.log($market[$level].bag)
-}
+	$: marketId = $level/townEvery;
 </script>
 
 <div class="modal-box">
@@ -19,7 +17,7 @@ $: if(displayMarket) {
 		box='market'
 		isMarket={true}
 	/>
-	{#each $market[$level].bag as thing, i}
+	{#each $market[marketId].bag as thing, i}
 		<ModalContentRow
 			index={i}
 			item={thing}

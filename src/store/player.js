@@ -37,6 +37,7 @@ export {
 	foodCarryCapacity,
 	// actions
 	movePlayer,
+	useAttack,
 	loseHealth,
 	changeLevel,
 	gainExperience,
@@ -134,6 +135,11 @@ function movePlayer(target) {
 	movesRemain.set(get(movesRemain) - 1)
 }
 
+function useAttack() {
+	attacksRemain.set(get(attacksRemain) - 1)
+	movesRemain.set(get(movesRemain) - 1)
+}
+
 function resetMoves() {
 	movesRemain.set(get(maxMoves));
 	attacksRemain.set(get(maxAttacks));
@@ -168,7 +174,7 @@ function addPlayerAlert(alert) {
 function pickUpItem(item, id) {
 	// Take item from monster
 	takeItemFromMonster(item, id)
-  // And put in player's hand
+	// And put in player's hand or mouth
 	hand.set([item]);
 }
 
@@ -271,15 +277,15 @@ function pickUpItems (target, currentMonsters) {
 		let armor = monsters[id].armor;
 		// auto pick up food
 		if (food > 0) {
-			let hunger = maxHealth-health;
-			let doggyBag = foodCarryCapacity;
-			let foodInHand = smallest(food, (hunger+doggyBag));
+			let belly = get(hunger);
+			let doggyBag = get(foodCarryCapacity);
+			let foodInHand = smallest(food, (belly + doggyBag));
 			addPlayerAlert(('+'+foodInHand+' food'));
-			if (hunger > 0) {	// eat what food you can
-				//console.log("eating "+smallest(foodInHand, hunger)+" food")
-				pickUpItem({type: 'food', amount: smallest(foodInHand, hunger)}, id)
+			if (belly > 0) {	// eat what food you can
+				//console.log("eating "+smallest(foodInHand, belly)+" food")
+				pickUpItem({type: 'food', amount: smallest(foodInHand, belly)}, id)
 				armItem(0);
-				foodInHand -= smallest(foodInHand, hunger)
+				foodInHand -= smallest(foodInHand, belly)
 			}
 			if ( foodInHand > 0 ) {	// put what you can in bag
 				//console.log("storing "+foodInHand+" food in bag")

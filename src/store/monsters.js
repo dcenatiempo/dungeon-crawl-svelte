@@ -1,12 +1,10 @@
 import { writable, readable, derived, get } from 'svelte/store';
-import { monsterList } from './constants';
+import { monsterList, townEvery } from './constants';
 import { world } from './world';
 import { getRand, add } from '../lib/utilities';
 import { level, locale, loseHealth as playerLoseHealth, clearPlayerAlerts } from './player';
 import { rarityTolerance } from './app';
 import { randomGold, getArmor, getWeapon, getMaxMoves, getMaxHealth, getMaxAttacks, isPlayer, battle } from '../lib/helpers';
-
-const townEvery = 5;
 
 export {
 	monsters,

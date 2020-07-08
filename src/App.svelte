@@ -6,7 +6,7 @@
 	import { dimensions, tileSize, grid, displayMarket, displayGear } from './store/app.js';
 	import { world, currentWorld, updateVisibility, addNewLevel } from './store/world.js';
 	import { monsters, populateLevel, monsterLoseHealth, isAliveMonster, isDeadMonster, monsterTurn } from './store/monsters.js';
-	import { level, locale, movePlayer, changeLevel, gainExperience, clearPlayerAlerts, pickUpItems, movesRemain, attacksRemain, resetMoves } from './store/player.js';
+	import { level, locale, movePlayer, changeLevel, gainExperience, clearPlayerAlerts, pickUpItems, movesRemain, attacksRemain, resetMoves, useAttack } from './store/player.js';
 	import { populateMarket } from './store/market.js';
 	import { townEvery } from './store/constants';
 	
@@ -165,6 +165,7 @@
 			let m = isAliveMonster(tarCell, currentMonsters);
 			// check to see if player has any attacks left
 			if ($attacksRemain >= 1 ) {
+				useAttack();
 				//console.log("Attack "+currentMonsters[m].type+"!");
 				let damage = battle(m, false);
 				monsterLoseHealth(m, damage);
@@ -176,7 +177,7 @@
 				/// timed erase of alerts
 				clearPlayerAlerts();
 			}
-			else movePlayerAction(locale);//no more attacks: 'move' player to square already on
+			else movePlayerAction(currCell);//no more attacks: 'move' player to square already on
 		}
 		else if (isDeadMonster(tarCell, currentMonsters) !== false ) {
 			//console.log("pick up items");

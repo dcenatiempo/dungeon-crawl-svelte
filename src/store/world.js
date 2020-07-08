@@ -1,10 +1,10 @@
 import { writable, readable, derived, get } from 'svelte/store';
 import { level, locale } from './player';
 import { grid } from '../store/app';
-import { shadowList as shadowListConst} from '../store/constants';
+import { townEvery, shadowList as shadowListConst} from '../store/constants';
 import { createTownLevel, createDungeonLevel, isInBounds } from '../lib/helpers';
 import { add } from '../lib/utilities';
-const townEvery = 5;
+
 export {
 	world,
 	currentWorld,
@@ -15,7 +15,7 @@ export {
 }
 
 const world = writable([createTownLevel(0)]);
-const currentWorld = derived([world, level], ([$world, $level]) => $world[$level]);
+const currentWorld = derived([world, level], ([$world, $level]) => $world[$level] || $world[$level - 1] || []);
 const virtualWorld = derived([locale, grid, level, currentWorld], ([$center, $grid, $level, $currentWorld]) => {
 		let height = $grid.height;
 		let width = $grid.width;
