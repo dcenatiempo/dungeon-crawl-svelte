@@ -1,7 +1,7 @@
 import { writable, readable, derived, get } from 'svelte/store';
 import { takeItemFromMonster } from './monsters';
 import { rarityTolerance } from './app';
-
+import { weaponList } from './constants';
 import { biggest, smallest } from '../lib/utilities';
 
 export {
@@ -307,13 +307,13 @@ function pickUpItems (target, currentMonsters) {
 		// auto pick up weapon
 		if (weapon.rarity >= get(rarityTolerance) && weapon.name != 'fist') {
 			if (player.body.filter(i=>i.type==='weapon')[0].name === 'fist'  ) {
-				//console.log("pick up and arm "+ weapon.name);
+				// console.log("pick up and arm "+ weapon.name);
 				addPlayerAlert('+ new weapon')
 				pickUpItem(weapon, id);
 				armItem(0);
 			}
-			else if ( (carryCapacity - carryAmount) >= weapon.size ) {
-				//console.log("pick up and store "+ weapon.name);
+			else if ((get(carryCapacity) - get(carryAmount)) >= weapon.size ) {
+				// console.log("pick up and store "+ weapon.name);
 				addPlayerAlert('+ new weapon')
 				pickUpItem(weapon, id);
 				storeItem(0);
@@ -322,13 +322,13 @@ function pickUpItems (target, currentMonsters) {
 		// auto pick up armor
 		if (armor.rarity >= get(rarityTolerance)) {
 			if ( get(body).find( i => i.type == [armor.type] ) === undefined) {
-				//console.log("pick up and arm "+ armor.material);
+				// console.log(`pick up and arm ${armor.material} ${armor.name}`);
 				addPlayerAlert(`+ new ${armor.material} armor`);
 				pickUpItem(armor, id);
 				armItem(0);
 			}
-			else if ( (carryCapacity - carryAmount) >= armor.size) {
-				//console.log("pick up and store "+ armor.material+" "+armor.name);
+			else if ((get(carryCapacity) - get(carryAmount)) >= armor.size) {
+				// console.log("pick up and store "+ armor.material+" "+armor.name);
 				addPlayerAlert(`+ new ${armor.material} armor`);
 				pickUpItem(armor, id);
 				storeItem(0);
