@@ -1,7 +1,7 @@
 import { writable, readable, derived, get } from 'svelte/store';
 import { monsterList, townEvery } from './constants';
 import { world } from './world';
-import { getRand, add } from '../lib/utilities';
+import { sleep, getRand, add } from '../lib/utilities';
 import { level, locale, loseHealth as playerLoseHealth, clearPlayerAlerts } from './player';
 import { rarityTolerance } from './app';
 import { randomGold, getArmor, getWeapon, getMaxMoves, getMaxHealth, getMaxAttacks, isPlayer, battle } from '../lib/helpers';
@@ -178,15 +178,12 @@ function monsterTurn(mi){
 	let target = [];
 	function deltaL(a, b) {  return [a[0] - b[0],a[1] - b[1]]; }
 	function isByPlayer(a,b) {
-		if (Math.abs(deltaL(a,b)[0]) <= 1 && Math.abs(deltaL(a,b)[1]) <= 1)
-			return true;
-		else return false;
+		return Math.abs(deltaL(a,b)[0]) <= 1 && Math.abs(deltaL(a,b)[1]) <= 1
 	}
 	// max out monster moves
-	//console.log(mL)
-	//console.log(pL)
-	//console.log(!isByPlayer(mL, pL))
-	while (moves > 0 && !isByPlayer(mL, pL)) {
+	function moveRecursive() {
+		if (moves <= 0) return;
+		if (isByPlayer(mL, pL)) return;
 		// check moves
 		for ( let r=-1; r<2; r++) {
 			for ( let c=-1; c<2; c++) {
@@ -198,8 +195,8 @@ function monsterTurn(mi){
 		target = target.sort((a,b)=> (Math.abs(a[0])+Math.abs(a[1])) - (Math.abs(b[0])+Math.abs(b[1])) )
 				.slice(0,3)
 				.map(item=> add(item, pL));
+
 		// make best move
-		
 		for( let t=0; t<3; t++) {
 			if ( (currentWorld[target[t][0]][target[t][1]].type === 'floor') && (!isAliveMonster(target[t])) && (!isPlayer(target[t], get(locale)))) {
 				moveMonster(mi, target[t]);
@@ -210,8 +207,10 @@ function monsterTurn(mi){
 		}
 		target=[];
 		moves--;
+		sleep(200).then(moveRecursive);
 	}
-	resetMoves(mi);
+	moveRecursive();
+
 	// max out monster attacks
 	while (moves>0 && attacks>0 && isByPlayer(mL, pL)) {
 		playerLoseHealth( battle( mi, true ) );
@@ -220,4 +219,5 @@ function monsterTurn(mi){
 		moves--;
 		attacks--;
 	}
+	resetMoves(mi);
 }

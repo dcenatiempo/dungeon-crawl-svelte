@@ -113,6 +113,8 @@
 			default:
 				dir = undefined;
 		}
+		if (!dir) return;
+
 		// targetCell is potential future location of player 
 		tarCell = [(currCell[0]+dir[0]),(currCell[1]+dir[1])];
 		// does player have any moves left???

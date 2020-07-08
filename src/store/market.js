@@ -21,24 +21,24 @@ function populateMarket(level) {
 	market.set(newMarket);
 }
 
-function buy(level, gold, item) {
+function buy(marketId, gold, item) {
 	debugger
 	const newMarket = JSON.parse(JSON.stringify(get(market)));
 	if (item.type === 'food')
-	  newMarket[level].bag[0].amount += 1;
-	else newMarket[level].bag.push(item);
-		newMarket[level].gold -= gold;
+	  newMarket[marketId].bag[0].amount += 1;
+	else newMarket[marketId].bag.push(item);
+		newMarket[marketId].gold -= gold;
 
 	market.set(newMarket);
 }
 
-function sell(level, gold, id) {
+function sell(marketId, gold, id) {
 	const newMarket = JSON.parse(JSON.stringify(get(market)));
 	debugger
 	if (id == 0)
-		newMarket[level].bag[0].amount -= 1;
-	else newMarket[level].bag.splice(id, 1);
-		newMarket[level].gold += gold;
+		newMarket[marketId].bag[0].amount -= 1;
+	else newMarket[marketId].bag.splice(id, 1);
+		newMarket[marketId].gold += gold;
 	
 	market.set(newMarket);
 }
