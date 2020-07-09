@@ -7,6 +7,8 @@ import { world } from '../store/world';
 import { townEvery } from '../store/constants';
 import { market } from '../store/market';
 
+import Alert from './common/Alert.svelte';
+
 export let cell;
 export let isPlayer;
 export let mID;
@@ -42,44 +44,50 @@ function toggleToolTip(x, y, obj) {
 }
 
 function inspectorClick (e) {
-		const target = e.target.id.split(",")
-		const tile = get(world)[level][target[0]][target[1]];
-		// console.log(target)
-		// console.log(tile.type)
-		const currentMonsters = get(monsters)[level];
-		if (isPlayer) {
-			toggleToolTip(e.clientX, e.clientY, get(player));
-		}
-		else if (isAliveMonster(target, currentMonsters) !== false) {
-			debugger
-			let monster = currentMonsters[isAliveMonster(target, currentMonsters)]
-			toggleToolTip(e.clientX, e.clientY, monster);
-		}
-		else if (isDeadMonster(target, currentMonsters) !== false) {
-			let corpse = currentMonsters[isDeadMonster(target, currentMonsters)]
-			toggleToolTip(e.clientX, e.clientY, corpse);
-		}
-		else if (tile.type === 'gate') {
-			toggleToolTip(e.clientX, e.clientY, tile);
-		}
-		else if (tile.type === 'market' ) {
-			let currentMarket = get(market)[level/townEvery]
-			toggleToolTip(e.clientX, e.clientY, currentMarket)
-		}
+		// const target = e.target.id.split(",")
+		// // console.log(target)
+		// // console.log(tile.type)
+		// const currentMonsters = get(monsters)[level];
+		// if (isPlayer) {
+		// 	toggleToolTip(e.clientX, e.clientY, get(player));
+		// }
+		// else if (isAliveMonster(target, currentMonsters) !== false) {
+		// 	debugger
+		// 	let monster = currentMonsters[isAliveMonster(target, currentMonsters)]
+		// 	toggleToolTip(e.clientX, e.clientY, monster);
+		// }
+		// else if (isDeadMonster(target, currentMonsters) !== false) {
+		// 	let corpse = currentMonsters[isDeadMonster(target, currentMonsters)]
+		// 	toggleToolTip(e.clientX, e.clientY, corpse);
+		// }
+		// else if (tile.type === 'gate') {
+		// 	toggleToolTip(e.clientX, e.clientY, tile);
+		// }
+		// else if (tile.type === 'market' ) {
+		// 	let currentMarket = get(market)[level/townEvery]
+		// 	toggleToolTip(e.clientX, e.clientY, currentMarket)
+		// }
 	}
-
+  $: if (tile && tile.type === "gate") {
+		console.log(tile)
+	}
 </script>
+
 {#if inBounds} 
 	<div 
 		key={id}
 		id={id}
 		on:mouseover={inspectorClick}
 		on:mouseleave={inspectorClick}
-		class={classes}
+		class={'cell ' + classes}
 		style={styles}
 		>
-		<!-- {tile.type === 'gate' ? tile.toLevel+1 : null}
-			{ (isPlayer(cell, locale) !== false) ? <Alert char={this.props.player}/> : null } -->
+		{#if tile && tile.type === "gate" && tile.vis && tile.fog < 1 && !isPlayer}
+			{tile.toLevel + 1}
+		{/if}
+		{#if isPlayer}
+			<Alert />
+		{/if}
 	</div>
 {:else}
   <div
@@ -101,8 +109,10 @@ function inspectorClick (e) {
 	justify-content: center;
 }
 .cell {
-	height: 50px;
-	width: 50px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	color: rgba(255, 255, 255, .5);
 	margin: 2px;
 }
 .temp-stats {
