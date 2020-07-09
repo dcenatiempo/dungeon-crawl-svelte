@@ -109,10 +109,6 @@ function inspectorClick (e) {
 	justify-content: center;
 }
 .cell {
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	color: rgba(255, 255, 255, .5);
 	margin: 2px;
 }
 .temp-stats {
@@ -140,6 +136,10 @@ function inspectorClick (e) {
 .gate {
 	@extend .cell;
 	background: purple;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	color: rgba(255, 255, 255, .5);
 }
 .fog {
 	filter: brightness(50%);

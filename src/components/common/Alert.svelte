@@ -20,6 +20,7 @@
 		text-align: center;
 		color: white;
 		z-index: 51;
+		max-height: calc(50vh - 50px);
 	}
 	.flex-col {
 		display: flex;
