@@ -33,7 +33,7 @@ $: classes = !tile
 				)
 			);
 
-let styles = `height: ${$tileSize}px;	width: ${$tileSize}px`;
+$: styles = `height: ${$tileSize}px;	width: ${$tileSize}px; margin: ${$tileSize/12.5}px`;
 $: id = `${cell[0]},${cell[1]}`
 
 function toggleToolTip(x, y, obj) {
@@ -44,29 +44,29 @@ function toggleToolTip(x, y, obj) {
 }
 
 function inspectorClick (e) {
-		// const target = e.target.id.split(",")
-		// // console.log(target)
-		// // console.log(tile.type)
-		// const currentMonsters = get(monsters)[level];
-		// if (isPlayer) {
-		// 	toggleToolTip(e.clientX, e.clientY, get(player));
-		// }
-		// else if (isAliveMonster(target, currentMonsters) !== false) {
-		// 	debugger
-		// 	let monster = currentMonsters[isAliveMonster(target, currentMonsters)]
-		// 	toggleToolTip(e.clientX, e.clientY, monster);
-		// }
-		// else if (isDeadMonster(target, currentMonsters) !== false) {
-		// 	let corpse = currentMonsters[isDeadMonster(target, currentMonsters)]
-		// 	toggleToolTip(e.clientX, e.clientY, corpse);
-		// }
-		// else if (tile.type === 'gate') {
-		// 	toggleToolTip(e.clientX, e.clientY, tile);
-		// }
-		// else if (tile.type === 'market' ) {
-		// 	let currentMarket = get(market)[level/townEvery]
-		// 	toggleToolTip(e.clientX, e.clientY, currentMarket)
-		// }
+		const target = e.target.id.split(",")
+		// console.log(target)
+		// console.log(tile.type)
+		const currentMonsters = get(monsters)[level];
+		if (isPlayer) {
+			toggleToolTip(e.clientX, e.clientY, get(player));
+		}
+		else if (isAliveMonster(target, currentMonsters) !== false) {
+			debugger
+			let monster = currentMonsters[isAliveMonster(target, currentMonsters)]
+			toggleToolTip(e.clientX, e.clientY, monster);
+		}
+		else if (isDeadMonster(target, currentMonsters) !== false) {
+			let corpse = currentMonsters[isDeadMonster(target, currentMonsters)]
+			toggleToolTip(e.clientX, e.clientY, corpse);
+		}
+		else if (tile.type === 'gate') {
+			toggleToolTip(e.clientX, e.clientY, tile);
+		}
+		else if (tile.type === 'market' ) {
+			let currentMarket = get(market)[level/townEvery]
+			toggleToolTip(e.clientX, e.clientY, currentMarket)
+		}
 	}
   $: if (tile && tile.type === "gate") {
 		console.log(tile)
@@ -109,7 +109,7 @@ function inspectorClick (e) {
 	justify-content: center;
 }
 .cell {
-	margin: 2px;
+	position: relative;
 }
 .temp-stats {
 	justify-content: space-around;

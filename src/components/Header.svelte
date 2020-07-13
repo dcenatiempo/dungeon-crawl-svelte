@@ -2,18 +2,22 @@
 import { get } from 'svelte/store';
 
 import { expLevel, experience, health, maxHealth, movesRemain, attacksRemain, bag } from '../store/player'
-import { rarityTolerance, displayGear } from '../store/app';
+import { rarityTolerance, displayGear, tileSize } from '../store/app';
 
 function toggleGear() {
 	displayGear.set(!get(displayGear));
 }
 	
-function toggleMarket () {
+function toggleMarket() {
 	displayMarket.set(!get(displayMarket));
 }
 
-function changeRarity (e) {
+function changeRarity(e) {
 	rarityTolerance.set(e.target.value);
+}
+
+function changeZoom(e) {
+	tileSize.set(e.target.value);
 }
 </script>
 
@@ -28,6 +32,15 @@ function changeRarity (e) {
 			max={10}
 			step={1}
 			on:change={changeRarity} />
+	</div>
+	<div>Zoom<input
+			class="slider"
+			type="range"
+			value="25"
+			min={10}
+			max={100}
+			step={1}
+			on:change={changeZoom} />
 	</div>
 	<div class="flex-col">
 		<div>Level: {$expLevel}</div>

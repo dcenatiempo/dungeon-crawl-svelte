@@ -29,6 +29,7 @@ import { monsters, isAnyMonster, isAliveMonster, isDeadMonster } from '../store/
 <style type="text/scss">
 .world {
 	background: #262626;
+	height: calc(100vh - 50px)
 }
 .world-grid {
 	grid-column: 2;

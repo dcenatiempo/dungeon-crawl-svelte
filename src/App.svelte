@@ -237,6 +237,10 @@
 		color: lightgray;
 		text-align: center;
 		margin: 10px 0;
+		position: fixed;
+		bottom: 0;
+		left: 0;
+		right: 0;
 	}
 	.footer-grid {
 		grid-column: 2 / 3;

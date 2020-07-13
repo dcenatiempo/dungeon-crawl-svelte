@@ -48,12 +48,13 @@ const grid = derived([dimensions, tileSize], ([$dimensions, $tileSize]) => {
 })
 
 function getGridSize(window, cellSize, lsidebar, rsidebar) {
+	debugger
 	let headerH = 50;		// header height in pixels
 	let footerH = 0;		// footer height in pixels
 	let lsb = lsidebar ? .3 : 0 ;	// sidebar width in %
 	let rsb = rsidebar ? .3 : 0 ;	// sidebar width in %
-	let cellMargin = 2;	// margin between tiles
-	let tileSize = cellSize+ 2 *cellMargin; // add margin to tilesize
+	let cellMargin = (cellSize/12.5);	// margin between tiles
+	let tileSize = +cellSize + (2 * cellMargin); // add margin to tilesize
 	let rows = Math.round( ( window.h - headerH - footerH - 2*tileSize ) / tileSize );
 	let cols = Math.round( ( window.w*(1-lsb-rsb) - 2*tileSize ) / tileSize );	
 	return { height: rows, width: cols };

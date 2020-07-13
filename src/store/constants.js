@@ -6,7 +6,7 @@ export {
 	shadowList,
 	townEvery
 }
-const townEvery = 2;
+const townEvery = 5;
 
 const monsterList = [
 	//group '0' common

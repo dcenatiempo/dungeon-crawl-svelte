@@ -4,7 +4,7 @@
 </script>
 
 {#if $flash}
-	<div class="alert flex-col"  style={`top: ${$tileSize +5}px`}>
+	<div class="alert flex-col"  style={`top: ${+$tileSize + 5}px`}>
 		{#each $alerts as alert}
 		 <div >{alert}</div>
 		{/each}
@@ -21,6 +21,7 @@
 		color: white;
 		z-index: 51;
 		max-height: calc(50vh - 50px);
+		overflow: hidden;
 	}
 	.flex-col {
 		display: flex;
